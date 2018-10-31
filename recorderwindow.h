@@ -1,5 +1,6 @@
-#ifndef MYTABWIDGET_H
-#define MYTABWIDGET_H
+#ifndef RECORDERWINDOW_H
+#define RECORDERWINDOW_H
+
 
 #include <QTabWidget>
 #include <QGridLayout>
@@ -16,31 +17,44 @@
 #include "chart.h"
 #include "chartview.h"
 
-class MyTabWidget
+
+class RecorderWindow
 {
 public:
-    MyTabWidget();
+    RecorderWindow();
+
+
+    //widgets that are included by mainWindowTabWidget, contains all layout and objects
+    QWidget *recordPageWidget;
+    QWidget *fftPageWidget;
+    //widget that cover all window space, divides it on record and fft area
+    QTabWidget *mainWindowTabWidget;
+    //Main Grid Layout, parent->recordPageWidget, contains left menu and right chart
+    QGridLayout *mainRecordLayout;
+    //first GroupBox in left menu, contains QVBoxLayot and widgets - buttons
+    QGroupBox *startGroupBox;
+    QGroupBox *pomiarGroupBox;
+    QGroupBox *resultsGroupBox;
+
+    //main MenuBoxLayout and boxes added to it = start box, pomiary box, wyniki box
+    QVBoxLayout *mainMenuBoxLayout;
+    QVBoxLayout *startMenuBoxLayout;
+    QVBoxLayout *pomiarMenuBoxLayout;
+    QVBoxLayout *resultsMenuBoxLayout;
+
+
+      Chart *currentWaveChart;
 
 
 
 
-    QTabWidget *myTab;
-    QGridLayout *mainFirstTab;
-    QWidget *firstPageWidget;
-    QWidget *secondPageWidget;
-
-
-
-    QPushButton *ConnectButton;
+    QPushButton *connectButton;
     QPushButton *loadButton;
     QPushButton *saveButton;
-    Chart *chart;
+
 
     //tempry
-    QVBoxLayout *MainVerticalBoxLayout;
-    QVBoxLayout *StartVerticalBoxLayout;
-    QVBoxLayout *VerticalBoxLayout;
-    QVBoxLayout *ResultsVerticalBoxLayout;
+
 
 
     QLabel *channelsLabel;
@@ -76,6 +90,7 @@ public:
 
 
 
+
 };
 
-#endif // MYTABWIDGET_H
+#endif // RECORDERWINDOW_H

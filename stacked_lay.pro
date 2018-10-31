@@ -25,13 +25,11 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
         main.cpp \
-    layout.cpp \
-    mytabwidget.cpp \
     chartview.cpp \
-    chart.cpp
+    chart.cpp \
+    recorderwindow.cpp
 
 HEADERS += \
-    layout.h \
-    mytabwidget.h \
     chartview.h \
-    chart.h
+    chart.h \
+    recorderwindow.h

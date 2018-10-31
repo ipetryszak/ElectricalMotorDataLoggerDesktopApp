@@ -8,7 +8,7 @@
 #include<QPushButton>
 
 #include "layout.h"
-#include "mytabwidget.h"
+#include "recorderwindow.h"
 
 int main(int argc, char *argv[])
 {
@@ -16,19 +16,19 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
 
 //    layout lay;
-    MyTabWidget *tabW = new MyTabWidget;
+    RecorderWindow *tabW = new RecorderWindow;
 
    //    QWidget *w = new QWidget();
 
         // Set the grid layout as a main layout
 
-        tabW->myTab->setMinimumSize(1100,700);
+        tabW->mainWindowTabWidget->setMinimumSize(1100,700);
 
         // Window title
-       tabW->myTab->setWindowTitle("Rejestrator v.beta");
+       tabW->mainWindowTabWidget->setWindowTitle("Rejestrator v.beta");
 
         // Display
-        tabW->myTab->show();
+        tabW->mainWindowTabWidget->show();
 
 
     return a.exec();
