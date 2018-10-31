@@ -3,6 +3,12 @@
 RecorderWindow::RecorderWindow()
 {
 
+    device = new SerialPort;
+    statusBar = new QStatusBar;
+    statusBar->setAutoFillBackground(1);
+
+
+
     //widgets with individual pages, MainWindowTabWidget consists of that
     recordPageWidget = new QWidget;
     fftPageWidget = new QWidget;
@@ -37,6 +43,10 @@ RecorderWindow::RecorderWindow()
 
             connectButton = new QPushButton;
             connectButton->setText("Połącz");
+            connect(connectButton,SIGNAL(clicked(bool)),device,SLOT(connectWithDevice()));
+            connect(device,SIGNAL(connected()),this,SLOT(connectedChanged()));
+            connect(device,SIGNAL(noConnected()),this,SLOT(noConnectedChanged()));
+
             loadButton = new QPushButton;
             loadButton->setText("Wczytaj");
             saveButton = new QPushButton;
@@ -76,6 +86,7 @@ RecorderWindow::RecorderWindow()
            channelsStringList->append("CH1 i CH2");
 
            channelsComboBox->addItems(*channelsStringList);
+           connect(channelsComboBox,SIGNAL(activated(int)),this,SLOT(channelChanged()));
 
     //----- end of channels position ----------------------
 
@@ -257,6 +268,27 @@ RecorderWindow::RecorderWindow()
 
 // added left menu and chart to grid layout and nextly to tab widget
     mainRecordLayout->addLayout(mainMenuBoxLayout,0,0,1,1,Qt::AlignTop);
-    mainRecordLayout->addWidget(chartView,0,1);
+    mainRecordLayout->addWidget(chartView,0,1,1,1);
+    mainRecordLayout->addWidget(statusBar,2,0,1,2);
+
+    statusBar->showMessage("Ready");
     recordPageWidget->setLayout(mainRecordLayout);
+}
+
+
+void RecorderWindow::connectedChanged()
+{
+    connectButton->setText("Rozłącz");
+    statusBar->showMessage("Znaleziono urządzenie i połączono");
+}
+void RecorderWindow::noConnectedChanged()
+{
+    connectButton->setText("Połącz");
+    statusBar->showMessage("Nie znaleziono urządzenia - podłącz urządzenie i spróbuj ponownie");
+}
+void RecorderWindow::channelChanged()
+{
+    device->send((channelsComboBox->currentIndex()+64));
+
+
 }

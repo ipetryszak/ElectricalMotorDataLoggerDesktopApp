@@ -7,7 +7,6 @@
 #include<QWidget>
 #include<QPushButton>
 
-#include "layout.h"
 #include "recorderwindow.h"
 
 int main(int argc, char *argv[])

@@ -27,9 +27,11 @@ SOURCES += \
         main.cpp \
     chartview.cpp \
     chart.cpp \
-    recorderwindow.cpp
+    recorderwindow.cpp \
+    serialport.cpp
 
 HEADERS += \
     chartview.h \
     chart.h \
-    recorderwindow.h
+    recorderwindow.h \
+    serialport.h

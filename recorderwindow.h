@@ -9,20 +9,36 @@
 #include <QLineSeries>
 #include <QtCore/QtMath>
 #include <QtCore/QRandomGenerator>
-#include <QRect>
 #include <QLabel>
 #include <QComboBox>
-#include<QGroupBox>
+#include <QGroupBox>
+#include <QObject>
+#include <QStatusBar>
 
 #include "chart.h"
 #include "chartview.h"
+#include "serialport.h"
 
 
-class RecorderWindow
+class RecorderWindow : public QObject
 {
+    Q_OBJECT
+
+public slots:
+    void connectedChanged();
+    void noConnectedChanged();
+    void channelChanged();
 public:
     RecorderWindow();
 
+    SerialPort *device;
+    QStatusBar *statusBar;
+
+    enum deviceCommands {CH1 = 1, CH2 = 2, CH12 = 3, S1kHz = 11, S2kHz = 12, S3kHz = 13, S4kHz = 14, S5kHz = 15, S6kHz = 16, S7kHz = 17,
+                        S8kHz = 18, S9kHz = 19, S10kHz = 20, T1s = 101,T2s = 102, T3s = 103, T4s = 104, T5s = 105, T6s = 106, T7s = 107,
+                        T8s = 108, T9s = 109, T10s = 110, START = 120, RISING_EDGE = 121};
+
+    deviceCommands commands;
 
     //widgets that are included by mainWindowTabWidget, contains all layout and objects
     QWidget *recordPageWidget;
@@ -43,19 +59,13 @@ public:
     QVBoxLayout *resultsMenuBoxLayout;
 
 
-      Chart *currentWaveChart;
+    Chart *currentWaveChart;
 
-
-
+    //OBJECTS
 
     QPushButton *connectButton;
     QPushButton *loadButton;
     QPushButton *saveButton;
-
-
-    //tempry
-
-
 
     QLabel *channelsLabel;
     QComboBox *channelsComboBox;
@@ -77,19 +87,14 @@ public:
     QComboBox *howStartComboBox;
     QStringList *howStartStringList;
 
-     QLabel *currentRMSDescribeLabel;
-     QLabel *currentRMSLabel;
+    QLabel *currentRMSDescribeLabel;
+    QLabel *currentRMSLabel;
 
+    QLabel *currentImaxDescribeLabel;
+    QLabel *currentImaxLabel;
 
-     QLabel *currentImaxDescribeLabel;
-     QLabel *currentImaxLabel;
-
-
-      QLabel *currentIminDescribeLabel;
-      QLabel *currentIminLabel;
-
-
-
+    QLabel *currentIminDescribeLabel;
+    QLabel *currentIminLabel;
 
 };
 
