@@ -45,7 +45,7 @@ void SerialPort::connectWithDevice()
         qDebug()<<"found device";
         myDevice->setPortName(devicePortName);
         myDevice->open(QIODevice::ReadWrite);
-        myDevice->setBaudRate(QSerialPort::Baud9600);
+        myDevice->setBaudRate(QSerialPort::Baud38400);
         myDevice->setDataBits(QSerialPort::Data8);
         myDevice->setFlowControl(QSerialPort::NoFlowControl);
         myDevice->setParity(QSerialPort::NoParity);
@@ -73,7 +73,8 @@ void SerialPort::send(QString msg)
 
 void SerialPort::readData()
 {
-
+    samplesIntVector.clear();
+    BufferSplit.clear();
     //appends all data do qbytearray
     byteArrayToReadData.append(myDevice->readAll());
 
@@ -93,5 +94,7 @@ void SerialPort::readData()
             tmpInt = tmpString.toInt();
             samplesIntVector.push_back(tmpInt);
          }
+        byteArrayToReadData.clear();
+        emit gotSample();
      }
 }

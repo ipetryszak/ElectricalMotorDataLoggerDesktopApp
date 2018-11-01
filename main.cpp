@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
 
         // Set the grid layout as a main layout
 
-        tabW->mainWindowTabWidget->setMinimumSize(1100,700);
+        tabW->mainWindowTabWidget->setMinimumSize(1150,780);
 
         // Window title
        tabW->mainWindowTabWidget->setWindowTitle("Rejestrator v.beta");

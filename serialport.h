@@ -15,6 +15,7 @@ class SerialPort : public QObject
 signals:
     connected();
     noConnected();
+    gotSample();
 
 public slots:
     void readData();
@@ -28,7 +29,7 @@ public:
     QStringList BufferSplit;
     QVector<int> samplesIntVector;
     QByteArray byteArrayToReadData;
-
+    int samplingFrequency = 0;
 private:
     static const quint16 vendorID = 1027;
     static const quint16 productID = 24577;

@@ -2,12 +2,11 @@
 
 RecorderWindow::RecorderWindow()
 {
-
     device = new SerialPort;
     statusBar = new QStatusBar;
     statusBar->setAutoFillBackground(1);
 
-
+    connect(device,SIGNAL(gotSample()),this,SLOT(paintSamples()));
 
     //widgets with individual pages, MainWindowTabWidget consists of that
     recordPageWidget = new QWidget;
@@ -196,12 +195,23 @@ RecorderWindow::RecorderWindow()
     resultsMenuBoxLayout->setContentsMargins(0,0,0,0);
     resultsMenuBoxLayout->addSpacing(10);
 
+    //--start of SamplingFrequency--------------------------
+
+        samplingFrequencyDescribeLabel = new QLabel;
+        samplingFrequencyLabel = new QLabel;
+
+        samplingFrequencyDescribeLabel ->setText("Częstotliwość próbkowania");
+
+        samplingFrequencyLabel->setText(" ");
+        samplingFrequencyLabel->setAutoFillBackground(1);
+
     //--start of Irms --------------------------
 
         currentRMSDescribeLabel = new QLabel;
         currentRMSLabel = new QLabel;
 
         currentRMSDescribeLabel ->setText("Irms");
+
         currentRMSLabel->setText(" ");
         currentRMSLabel->setAutoFillBackground(1);
 
@@ -229,6 +239,9 @@ RecorderWindow::RecorderWindow()
 
      //-- end of Imin --------------------------
 
+
+    resultsMenuBoxLayout->addWidget(samplingFrequencyDescribeLabel);
+    resultsMenuBoxLayout->addWidget(samplingFrequencyLabel);
     resultsMenuBoxLayout->addWidget(currentRMSDescribeLabel);
     resultsMenuBoxLayout->addWidget(currentRMSLabel);
     resultsMenuBoxLayout->addWidget(currentImaxDescribeLabel);
@@ -249,20 +262,14 @@ RecorderWindow::RecorderWindow()
 //---------------------------------------------------------------------------
 
     currentWaveChart = new Chart();
-    QLineSeries *series = new QLineSeries();
-
-    for (int i = 0; i < 500; i++) {
-        QPointF p((qreal) i, qSin(M_PI / 50 * i) * 100);
-        p.ry() += QRandomGenerator::global()->bounded(20);
-        *series << p;
-    }
-
+    series = new QLineSeries();
     currentWaveChart->addSeries(series);
     currentWaveChart->setTitle("PRZEBIEG PRĄDOWY i=f(t) ZAREJESTROWANEGO SYGNAŁU");
     currentWaveChart->setAnimationOptions(QChart::SeriesAnimations);
     currentWaveChart->legend()->hide();
     currentWaveChart->createDefaultAxes();
-
+    currentWaveChart->axisY()->setRange(0,200);
+    currentWaveChart->axisX()->setRange(0,0.2);
     ChartView *chartView = new ChartView(currentWaveChart);
     chartView->setRenderHint(QPainter::Antialiasing);
 
@@ -301,6 +308,12 @@ void RecorderWindow::samplingChanged()
 {
     QStringList sampling = {"F0!","F1!","F2!","F3!","F4!","F5!","F6!","F7!","F8!","F9!"};
     device->send(sampling.at(samplingComboBox->currentIndex()));
+    device->samplingFrequency = (samplingComboBox->currentIndex()+1)*1000;
+    QString tmp;
+    tmp.append(QString::number(device->samplingFrequency,10));
+    tmp.append(" Hz");
+    samplingFrequencyLabel->setText(tmp);
+
 }
 
 void RecorderWindow::timeChanged()
@@ -313,4 +326,27 @@ void RecorderWindow::howStartChanged()
 {
     QStringList start = {"","S1!","S2!"};
     device->send(start.at(howStartComboBox->currentIndex()));
+}
+
+void RecorderWindow::paintSamples()
+{
+    series->clear();
+    currentWaveChart->removeSeries(series);
+    qreal step = 0;
+    if(device->samplingFrequency!=0)step = (1/(qreal)(device->samplingFrequency));
+    static qreal x=0;
+
+    for (int i = 0; i < device->samplesIntVector.size(); i++)
+    {
+
+        QPointF p(x+=step, device->samplesIntVector[i]/10);
+        series->append(p);
+
+    }
+
+    currentWaveChart->addSeries(series);
+
+    currentWaveChart->createDefaultAxes();
+    currentWaveChart->axisY()->setRange(0,200);
+    currentWaveChart->axisX()->setRange(0,0.2);
 }
