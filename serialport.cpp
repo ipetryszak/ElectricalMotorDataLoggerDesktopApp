@@ -1,16 +1,14 @@
 #include "serialport.h"
-QSerialPortInfo *info;
+
 SerialPort::SerialPort()
 {
 
-    tmp = "";
-
     //create QSerialPort object
     myDevice = new QSerialPort;
-    connect(myDevice,SIGNAL(readyRead()),this,SLOT(display()));
+    connect(myDevice,SIGNAL(readyRead()),this,SLOT(readData()));
 
 
-    /*  testing code
+    /*  testing code to discover vendor and product id
      qDebug()<<"Number of ports "<<QSerialPortInfo::availablePorts().length()<<"\n";
      for(const QSerialPortInfo &SerialPortInfo : QSerialPortInfo::availablePorts())
      {
@@ -20,39 +18,8 @@ SerialPort::SerialPort()
          qDebug()<<"Has product ID ? "<<SerialPortInfo.hasProductIdentifier()<<"\n";
          qDebug()<<"Product ID "<<SerialPortInfo.productIdentifier()<<"\n";
      }
-*/
+    */
 
-}
-
-
-void SerialPort::readData()
-{
-/*
-        byteArray.append(port->readAll());
-  // QByteArray array;
-  //  array = port->readAll();
-
-    if(byteArray.endsWith("!"))
-    {
-        QString a(byteArray);
-        tmp+=a;
-        BufferSplit = tmp.split(',');
-
-        for(int i=0;i<BufferSplit.size()-1;i++)
-        {
-            QString tmpString;
-            int tmpInt;
-            tmpString = BufferSplit[i];
-            tmpInt = tmpString.toInt();
-            pomiary.push_back(tmpInt);
-         }
-       // for(int i=0;i<pomiary.size();i++)qDebug()<<pomiary[i];
-    //    qDebug()<<pomiary;
-     //   emit containChanged();
-
-    }
-   // emit containChanged();
-   */
 }
 
 
@@ -103,24 +70,28 @@ void SerialPort::send(QString msg)
 
 }
 
-void SerialPort::display()
+
+void SerialPort::readData()
 {
-    QByteArray array;
-    array = myDevice->readAll();
-    QString got(array);
 
+    //appends all data do qbytearray
+    byteArrayToReadData.append(myDevice->readAll());
 
-    tmp+=got;
-
-        qDebug()<<tmp;
-        tmp = "";
-
+    //data receiving process ends with char "!" so then data can be converted to int type
+    if(byteArrayToReadData.endsWith("!"))
+    {
+        //converting received data from qbyte to qstring
+        QString tmp(byteArrayToReadData);
+        //adding coverted data to qstringlist, data are spilted using coma
+        BufferSplit = tmp.split(',');
+        //converting data from qstring list to vector<int> array
+        for(int i=0;i<BufferSplit.size()-1;i++)
+        {
+            QString tmpString;
+            int tmpInt;
+            tmpString = BufferSplit[i];
+            tmpInt = tmpString.toInt();
+            samplesIntVector.push_back(tmpInt);
+         }
+     }
 }
-
-
-
-
-
-
-
-
