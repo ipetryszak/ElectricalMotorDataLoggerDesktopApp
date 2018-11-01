@@ -94,15 +94,10 @@ void SerialPort::connectWithDevice()
 }
 
 
-void SerialPort::send(int data)
+void SerialPort::send(QString msg)
 {
-
-    char toSend = 0b00000000;
-    for(int i=0;i<data;i++)toSend++;
-
-
-    if(myDevice->isOpen()) {
-        myDevice->write(&toSend);
+   if(myDevice->isOpen()) {
+        myDevice->write(msg.toStdString().c_str());
         myDevice->waitForBytesWritten(-1);
     }
 
@@ -112,7 +107,14 @@ void SerialPort::display()
 {
     QByteArray array;
     array = myDevice->readAll();
-    qDebug()<<array[0]<<"\n";
+    QString got(array);
+
+
+    tmp+=got;
+
+        qDebug()<<tmp;
+        tmp = "";
+
 }
 
 

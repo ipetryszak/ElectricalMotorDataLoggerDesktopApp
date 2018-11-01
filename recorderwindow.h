@@ -28,6 +28,9 @@ public slots:
     void connectedChanged();
     void noConnectedChanged();
     void channelChanged();
+    void samplingChanged();
+    void timeChanged();
+    void howStartChanged();
 public:
     RecorderWindow();
 

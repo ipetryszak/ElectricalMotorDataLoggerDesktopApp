@@ -30,7 +30,7 @@ public slots:
 public:
     SerialPort();
     void connectWithDevice(QSerialPort *myDevice);
-    void send(int data);
+    void send(QString data);
 
 
 

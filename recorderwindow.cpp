@@ -109,6 +109,7 @@ RecorderWindow::RecorderWindow()
            samplingStringList->append("10 kHz");
 
            samplingComboBox->addItems(*samplingStringList);
+           connect(samplingComboBox,SIGNAL(activated(int)),this,SLOT(samplingChanged()));
 
     //----- end of częstotliwość próbkowania position -----
 
@@ -131,6 +132,7 @@ RecorderWindow::RecorderWindow()
            timeStringList->append("10 s");
 
            timeComboBox->addItems(*timeStringList);
+           connect(timeComboBox,SIGNAL(activated(int)),this,SLOT(timeChanged()));
 
      //---- end of czas próbkowania position --------------
 
@@ -162,6 +164,8 @@ RecorderWindow::RecorderWindow()
 
 
            howStartComboBox->addItems(*howStartStringList);
+
+           connect(howStartComboBox,SIGNAL(activated(int)),this,SLOT(howStartChanged()));
 
      //------ end of tryb pomiaru --------------------------
 
@@ -288,7 +292,25 @@ void RecorderWindow::noConnectedChanged()
 }
 void RecorderWindow::channelChanged()
 {
-    device->send((channelsComboBox->currentIndex()+64));
 
+    QStringList channels = {"C1!","C2!","C3!"};
+    device->send(channels.at(channelsComboBox->currentIndex()));
+}
 
+void RecorderWindow::samplingChanged()
+{
+    QStringList sampling = {"F0!","F1!","F2!","F3!","F4!","F5!","F6!","F7!","F8!","F9!"};
+    device->send(sampling.at(samplingComboBox->currentIndex()));
+}
+
+void RecorderWindow::timeChanged()
+{
+    QStringList time = {"T0!","T1!","T2!","T3!","T4!","T5!","T6!","T7!","T8!","T9!"};
+    device->send(time.at(timeComboBox->currentIndex()));
+}
+
+void RecorderWindow::howStartChanged()
+{
+    QStringList start = {"","S1!","S2!"};
+    device->send(start.at(howStartComboBox->currentIndex()));
 }
