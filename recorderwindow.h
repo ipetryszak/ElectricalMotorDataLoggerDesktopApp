@@ -35,15 +35,18 @@ public slots:
     void howStartChanged();
     void paintSamples();
     void disconnectedCorrectlyChanged();
+    void rangeChanged();
 
 public:
     RecorderWindow();
 
     QLineSeries *series;
+    QLineSeries *series2;
     SerialPort *device;
     QStatusBar *statusBar;
     Chart *chart;
     ChartView *chartView;
+    int currentRange=0;
 
     //widgets that are included by mainWindowTabWidget, contains all layout and objects
     QWidget *recordPageWidget;

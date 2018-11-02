@@ -5,6 +5,8 @@ SerialPort::SerialPort()
 
     //create QSerialPort object
     myDevice = new QSerialPort;
+    //default sampling frequency
+    samplingFrequency = 1000;
     connect(myDevice,SIGNAL(readyRead()),this,SLOT(readData()));
 
 
@@ -94,6 +96,7 @@ void SerialPort::readData()
         QString tmp(byteArrayToReadData);
         //adding coverted data to qstringlist, data are spilted using coma
         BufferSplit = tmp.split(',');
+        qDebug()<<BufferSplit;
         //converting data from qstring list to vector<int> array
         for(int i=0;i<BufferSplit.size()-1;i++)
         {

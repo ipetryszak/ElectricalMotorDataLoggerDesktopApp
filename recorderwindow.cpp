@@ -147,6 +147,7 @@ RecorderWindow::RecorderWindow()
            rangeStringList->append("10 mV/A");
            rangeStringList->append("100 mV/A");
 
+           connect(rangeComboBox,SIGNAL(activated(int)),this,SLOT(rangeChanged()));
            rangeComboBox->addItems(*rangeStringList);
 
      //---- end of zakres position -----------------------
@@ -264,12 +265,14 @@ RecorderWindow::RecorderWindow()
 
     chart = new Chart();
     series = new QLineSeries();
+    series2 = new QLineSeries;
     chart->addSeries(series);
+    chart->addSeries(series2);
     chart->setTitle("PRZEBIEG PRĄDOWY i=f(t) ZAREJESTROWANEGO SYGNAŁU");
     chart->setAnimationOptions(QChart::SeriesAnimations);
     chart->legend()->hide();
     chart->createDefaultAxes();
-    chart->axisY()->setRange(0,200);
+    chart->axisY()->setRange(-500,500);
     chart->axisX()->setRange(0,0.2);
     chartView = new ChartView(chart);
     chartView->setRenderHint(QPainter::Antialiasing);
@@ -312,6 +315,11 @@ void RecorderWindow::channelChanged()
     device->send(channels.at(channelsComboBox->currentIndex()));
 }
 
+void RecorderWindow::rangeChanged()
+{
+    currentRange = rangeComboBox->currentIndex();
+}
+
 void RecorderWindow::samplingChanged()
 {
     QStringList sampling = {"F0!","F1!","F2!","F3!","F4!","F5!","F6!","F7!","F8!","F9!"};
@@ -340,19 +348,54 @@ void RecorderWindow::paintSamples()
 {
 
     series->clear();
-
+    series2->clear();
+    chart->removeSeries(series);
+    chart->removeSeries(series2);
 
     qreal step = 0;
-    if(device->samplingFrequency!=0)step = (1/(qreal)(device->samplingFrequency));
     qreal x=0;
-    for (int i = 0; i < device->samplesIntVector.size(); i++)
+    if(channelsComboBox->currentIndex() == 0 | channelsComboBox->currentIndex() == 1)
     {
-        QPointF p(x+=step, device->samplesIntVector[i]/10);
-        series->append(p);
+        int divideFactor=1;
+        if(currentRange==0)divideFactor=1;
+        if(currentRange==1)divideFactor=10;
+        if(currentRange==2)divideFactor=100;
+        if(device->samplingFrequency!=0)step = (1/(qreal)(device->samplingFrequency));
+
+        for (int i = 0; i < device->samplesIntVector.size(); i++)
+        {
+            QPointF p(x+=step, ((qreal)(device->samplesIntVector[i]-1080))/(divideFactor));
+            series->append(p);
+        }
     }
-    chart->removeSeries(series);
+    else if(channelsComboBox->currentIndex()==2)
+    {
+        if(device->samplingFrequency!=0)step = (1/(qreal)((device->samplingFrequency)));
+        for (int i = 0; i < device->samplesIntVector.size()-1; i+=2)
+        {
+            QPointF p(x+=step, device->samplesIntVector[i]/10);
+            QPointF r(x,device->samplesIntVector[i+1]/10);
+            series->append(p);
+            series2->append(r);
+        }
+    }
+
+
+
     chart->addSeries(series);
+    chart->addSeries(series2);
+
     chart->createDefaultAxes();
-    chart->axisY()->setRange(0,200);
-    chart->axisX()->setRange(0,0.2);
+
+    if(currentRange==1)
+    {
+        chart->axisY()->setRange(-80,80);
+        chart->axisX()->setRange(0,0.2);
+    }
+    if(currentRange==2)
+    {
+        chart->axisY()->setRange(-20,20);
+        chart->axisX()->setRange(0,0.2);
+    }
+
 }
