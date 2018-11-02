@@ -45,6 +45,7 @@ RecorderWindow::RecorderWindow()
             connect(connectButton,SIGNAL(clicked(bool)),device,SLOT(connectWithDevice()));
             connect(device,SIGNAL(connected()),this,SLOT(connectedChanged()));
             connect(device,SIGNAL(noConnected()),this,SLOT(noConnectedChanged()));
+            connect(device,SIGNAL(disconnectedCorrectly()),this,SLOT(disconnectedCorrectlyChanged()));
 
             loadButton = new QPushButton;
             loadButton->setText("Wczytaj");
@@ -261,16 +262,16 @@ RecorderWindow::RecorderWindow()
 //--------------------------- START OF CHART AREA ---------------------------
 //---------------------------------------------------------------------------
 
-    currentWaveChart = new Chart();
+    chart = new Chart();
     series = new QLineSeries();
-    currentWaveChart->addSeries(series);
-    currentWaveChart->setTitle("PRZEBIEG PRĄDOWY i=f(t) ZAREJESTROWANEGO SYGNAŁU");
-    currentWaveChart->setAnimationOptions(QChart::SeriesAnimations);
-    currentWaveChart->legend()->hide();
-    currentWaveChart->createDefaultAxes();
-    currentWaveChart->axisY()->setRange(0,200);
-    currentWaveChart->axisX()->setRange(0,0.2);
-    ChartView *chartView = new ChartView(currentWaveChart);
+    chart->addSeries(series);
+    chart->setTitle("PRZEBIEG PRĄDOWY i=f(t) ZAREJESTROWANEGO SYGNAŁU");
+    chart->setAnimationOptions(QChart::SeriesAnimations);
+    chart->legend()->hide();
+    chart->createDefaultAxes();
+    chart->axisY()->setRange(0,200);
+    chart->axisX()->setRange(0,0.2);
+    chartView = new ChartView(chart);
     chartView->setRenderHint(QPainter::Antialiasing);
 
 //---------------------------------------------------------------------------
@@ -297,6 +298,13 @@ void RecorderWindow::noConnectedChanged()
     connectButton->setText("Połącz");
     statusBar->showMessage("Nie znaleziono urządzenia - podłącz urządzenie i spróbuj ponownie");
 }
+
+void RecorderWindow::disconnectedCorrectlyChanged()
+{
+    connectButton->setText("Połącz");
+    statusBar->showMessage("Rozłączono urządzenie - kliknij połącz aby połączyć ponownie");
+}
+
 void RecorderWindow::channelChanged()
 {
 
@@ -330,23 +338,21 @@ void RecorderWindow::howStartChanged()
 
 void RecorderWindow::paintSamples()
 {
+
     series->clear();
-    currentWaveChart->removeSeries(series);
+
+
     qreal step = 0;
     if(device->samplingFrequency!=0)step = (1/(qreal)(device->samplingFrequency));
-    static qreal x=0;
-
+    qreal x=0;
     for (int i = 0; i < device->samplesIntVector.size(); i++)
     {
-
         QPointF p(x+=step, device->samplesIntVector[i]/10);
         series->append(p);
-
     }
-
-    currentWaveChart->addSeries(series);
-
-    currentWaveChart->createDefaultAxes();
-    currentWaveChart->axisY()->setRange(0,200);
-    currentWaveChart->axisX()->setRange(0,0.2);
+    chart->removeSeries(series);
+    chart->addSeries(series);
+    chart->createDefaultAxes();
+    chart->axisY()->setRange(0,200);
+    chart->axisX()->setRange(0,0.2);
 }

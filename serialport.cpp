@@ -25,24 +25,32 @@ SerialPort::SerialPort()
 
 void SerialPort::connectWithDevice()
 {
-    bool deviceIsAvailable = false;
-    QString devicePortName;
-    for(const QSerialPortInfo &SerialPortInfo : QSerialPortInfo::availablePorts())
+    if(myDevice->isOpen())
     {
-        if(SerialPortInfo.hasProductIdentifier() && SerialPortInfo.hasVendorIdentifier())
-        {
-            if(SerialPortInfo.productIdentifier()==productID && SerialPortInfo.vendorIdentifier()==vendorID)
-            {
-                deviceIsAvailable = true;
-                devicePortName = SerialPortInfo.portName();
-            }
-        }
+        //disconnect device;
+        myDevice->close();
+        qDebug()<<"Device disconnected";
+        emit disconnectedCorrectly();
     }
-
+    else
+    {
+            bool deviceIsAvailable = false;
+            QString devicePortName;
+            for(const QSerialPortInfo &SerialPortInfo : QSerialPortInfo::availablePorts())
+                {
+                    if(SerialPortInfo.hasProductIdentifier() && SerialPortInfo.hasVendorIdentifier())
+                        {
+                            if(SerialPortInfo.productIdentifier()==productID && SerialPortInfo.vendorIdentifier()==vendorID)
+                                {
+                                    deviceIsAvailable = true;
+                                    devicePortName = SerialPortInfo.portName();
+                                }
+                        }
+                }
 
     if(deviceIsAvailable)
     {
-        qDebug()<<"found device";
+        qDebug()<<"Device found";
         myDevice->setPortName(devicePortName);
         myDevice->open(QIODevice::ReadWrite);
         myDevice->setBaudRate(QSerialPort::Baud38400);
@@ -54,8 +62,9 @@ void SerialPort::connectWithDevice()
     }
     else
     {
-        qDebug()<<"couldnt find device";
+        qDebug()<<"Device didn't find";
         emit noConnected();
+    }
     }
 
 }

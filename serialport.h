@@ -15,6 +15,7 @@ class SerialPort : public QObject
 signals:
     connected();
     noConnected();
+    disconnectedCorrectly();
     gotSample();
 
 public slots:

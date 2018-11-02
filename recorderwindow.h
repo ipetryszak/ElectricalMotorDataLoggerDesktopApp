@@ -21,6 +21,7 @@
 #include "serialport.h"
 
 
+
 class RecorderWindow : public QObject
 {
     Q_OBJECT
@@ -33,14 +34,16 @@ public slots:
     void timeChanged();
     void howStartChanged();
     void paintSamples();
+    void disconnectedCorrectlyChanged();
+
 public:
     RecorderWindow();
 
     QLineSeries *series;
     SerialPort *device;
     QStatusBar *statusBar;
-
-
+    Chart *chart;
+    ChartView *chartView;
 
     //widgets that are included by mainWindowTabWidget, contains all layout and objects
     QWidget *recordPageWidget;
@@ -61,7 +64,7 @@ public:
     QVBoxLayout *resultsMenuBoxLayout;
 
 
-    Chart *currentWaveChart;
+
 
     //OBJECTS
 
