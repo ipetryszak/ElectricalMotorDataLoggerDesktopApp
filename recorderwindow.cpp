@@ -274,12 +274,13 @@ RecorderWindow::RecorderWindow()
     series2 = new QLineSeries;
     chart->addSeries(series);
     chart->addSeries(series2);
+
     chart->setTitle("PRZEBIEG PRĄDOWY i=f(t) ZAREJESTROWANEGO SYGNAŁU");
     chart->setAnimationOptions(QChart::SeriesAnimations);
     chart->legend()->hide();
     chart->createDefaultAxes();
     chart->axisY()->setRange(-500,500);
-    chart->axisX()->setRange(0,0.2);
+    chart->axisX()->setRange(0,0.1);
     chartView = new ChartView(chart);
     chartView->setRenderHint(QPainter::Antialiasing);
 
@@ -306,8 +307,32 @@ RecorderWindow::RecorderWindow()
     mainFFTLayout = new QGridLayout;
     mainFFTLayout->setColumnMinimumWidth(0,140);
 
+    chartFFT->addSeries(seriesFFT);
+    chartFFT2->addSeries(seriesFFT2);
 
 
+    chartFFT->setTitle("Rozkład FFT");
+    chartFFT->setAnimationOptions(QChart::SeriesAnimations);
+    chartFFT->legend()->hide();
+    chartFFT->createDefaultAxes();
+    chartFFT->axisY()->setRange(0,obj.maxAmplitude);
+    chartFFT->axisX()->setRange(0,500);
+    chartViewFFT->setRenderHint(QPainter::Antialiasing);
+
+  //  chartFFT2->addSeries(seriesFFT2);
+    chartFFT2->setTitle(" Rozkład FFT");
+    chartFFT2->setAnimationOptions(QChart::SeriesAnimations);
+    chartFFT2->legend()->hide();
+    chartFFT2->createDefaultAxes();
+    chartFFT2->axisY()->setRange(0,obj.maxAmplitude2);
+    chartFFT2->axisX()->setRange(0,500);
+
+    chartViewFFT2->setRenderHint(QPainter::Antialiasing);
+
+
+    mainFFTLayout->addWidget(chartViewFFT,0,0,1,1);
+    mainFFTLayout->addWidget(chartViewFFT2,1,0,1,1);
+    fftPageWidget->setLayout(mainFFTLayout);
     //---------------------------------------------------------------------------
     //-------------------------- END OF CHART AREA FFT --------------------------
     //---------------------------------------------------------------------------
@@ -453,30 +478,26 @@ void RecorderWindow::paintSamples()
 void RecorderWindow::loadData()
 {
      myFile.openFile();
-
-  /*   series->clear();
-     series2->clear();
-     chart->removeSeries(series);
-     chart->removeSeries(series2);
-
-     float x=0;
-     for (int i = 0; i < myFile.samples.size(); i++)
-     {
-         QPointF p((qreal)(x+=0.001), ((qreal)(myFile.samples[i])));
-         series->append(p);
-     }
-     chart->addSeries(series);
-     chart->addSeries(series2);
-
-     chart->createDefaultAxes();
-
-*/
-
-    obj.doFFT(myFile);
+     obj.doFFT(myFile);
 
 
     if(myFile.info.amountOfChannels==1)
     {
+
+        series->clear();
+        series2->clear();
+        chart->removeSeries(series);
+        chart->removeSeries(series2);
+
+        float x=0;
+        for (int i = 0; i < myFile.samples.size(); i++)
+        {
+            QPointF p((qreal)(x+=0.001), ((qreal)(myFile.samples[i])));
+            series->append(p);
+        }
+        chart->addSeries(series);
+        chart->addSeries(series2);
+
        seriesFFT->clear();
        chartFFT->removeSeries(seriesFFT);
 
@@ -504,10 +525,30 @@ void RecorderWindow::loadData()
 
     if(myFile.info.amountOfChannels==2)
     {
+
+       if(series->count() != 0) series->clear();
+       if(series2->count() != 0) series2->clear();
+
+        float x = 0;
+        float step = 1/(float)myFile.info.samplingFrequency;
+
+        for (int i = 0; i < myFile.samples2d.size(); i++)
+        {
+            QPointF p((qreal)(x+=step), ((qreal)(myFile.samples2d[i].at(0))));
+            series->append(p);
+            QPointF p1((qreal)(x+=step), ((qreal)(myFile.samples2d[i].at(1))));
+            series2->append(p1);
+        }
+
+        chart->createDefaultAxes();
+        chart->axisY()->setRange(myFile.generalMinAmplitude,
+                                 myFile.generalMaxAmplitude);
+        chart->axisX()->setRange(0,0.2);
+
+
+
        seriesFFT->clear();
        seriesFFT2->clear();
-       chartFFT->removeSeries(seriesFFT);
-       chartFFT2->removeSeries(seriesFFT2);
 
 
        for (int i = 0; i < obj.xStep.size(); i++)
@@ -519,29 +560,14 @@ void RecorderWindow::loadData()
            seriesFFT2->append(p2);
        }
 
-
-        chartFFT->addSeries(seriesFFT);
-        chartFFT->setTitle("Rozkład FFT");
-        chartFFT->setAnimationOptions(QChart::SeriesAnimations);
-        chartFFT->legend()->hide();
         chartFFT->createDefaultAxes();
-        chartFFT->axisY()->setRange(0,obj.maxAmplitude);
+        chartFFT->axisY()->setRange(0,obj.maxAmplitude+0.25*obj.maxAmplitude);
         chartFFT->axisX()->setRange(0,500);
-        chartViewFFT->setRenderHint(QPainter::Antialiasing);
-
-        chartFFT2->addSeries(seriesFFT2);
-        chartFFT2->setTitle(" Rozkład FFT");
-        chartFFT2->setAnimationOptions(QChart::SeriesAnimations);
-        chartFFT2->legend()->hide();
         chartFFT2->createDefaultAxes();
-        chartFFT2->axisY()->setRange(0,obj.maxAmplitude2);
+        chartFFT2->axisY()->setRange(0,obj.maxAmplitude2+0.25*obj.maxAmplitude2);
         chartFFT2->axisX()->setRange(0,500);
 
-        chartViewFFT2->setRenderHint(QPainter::Antialiasing);
 
-        mainFFTLayout->addWidget(chartViewFFT,0,0,1,1);
-        mainFFTLayout->addWidget(chartViewFFT2,1,0,1,1);
-        fftPageWidget->setLayout(mainFFTLayout);
 
     }
 

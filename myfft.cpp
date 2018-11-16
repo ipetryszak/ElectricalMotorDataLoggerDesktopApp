@@ -89,6 +89,7 @@ void myFFT::doFFT(Files obj)
           if(amplitude[i]>maxAmplitude) maxAmplitude = amplitude[i];
           if(amplitude2[i]>maxAmplitude2) maxAmplitude2 = amplitude2[i];
          }
+         int i;
         break;
     }
 

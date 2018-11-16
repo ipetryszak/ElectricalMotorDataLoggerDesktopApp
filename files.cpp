@@ -80,7 +80,27 @@ void Files::openFile()
             samples2d.push_back(tmpV);
 
         }
-qDebug()<<"ok";
+
+        //find max amplitude
+        maxAmplitude = samples2d[0].at(0);
+        maxAmplitude2 = samples2d[0].at(1);
+        for(int i=1;i<samples2d.size();i++)
+        {
+            if(maxAmplitude<samples2d[i].at(0))maxAmplitude = samples2d[i].at(0);
+            if(maxAmplitude2<samples2d[i].at(1))maxAmplitude2 = samples2d[i].at(1);
+        }
+
+        minAmplitude = samples2d[0].at(0);
+        minAmplitude2 = samples2d[0].at(1);
+        for(int i=1;i<samples2d.size();i++)
+        {
+            if(minAmplitude>samples2d[i].at(0))minAmplitude = samples2d[i].at(0);
+            if(minAmplitude2<samples2d[i].at(1))minAmplitude2 = samples2d[i].at(1);
+        }
+
+        generalMaxAmplitude = (maxAmplitude>maxAmplitude2) ? maxAmplitude : maxAmplitude2;
+        generalMinAmplitude = (minAmplitude<minAmplitude2) ? minAmplitude : minAmplitude2;
+
 
 
 

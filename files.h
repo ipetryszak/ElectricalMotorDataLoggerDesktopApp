@@ -27,14 +27,20 @@ public:
     QVector<QVector<float>> samples2d;
     QVector<float> samples;
 
+    float maxAmplitude;
+    float maxAmplitude2;
+    float minAmplitude;
+    float minAmplitude2;
+
+    float generalMaxAmplitude;
+    float generalMinAmplitude;
+
     struct content
     {
         int amountOfChannels;
         int samplingFrequency;
         int samplingPeriod;
         int range;
-
-
     };
 
    void openFile();
