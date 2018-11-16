@@ -28,10 +28,36 @@ SOURCES += \
     chartview.cpp \
     chart.cpp \
     recorderwindow.cpp \
-    serialport.cpp
+    serialport.cpp \
+    mainwindow.cpp \
+    myfft.cpp \
+    files.cpp
 
 HEADERS += \
     chartview.h \
     chart.h \
     recorderwindow.h \
-    serialport.h
+    serialport.h \
+    fft/Array.h \
+    fft/Array.hpp \
+    fft/def.h \
+    fft/DynArray.h \
+    fft/DynArray.hpp \
+    fft/FFTReal.h \
+    fft/FFTReal.hpp \
+    fft/FFTRealFixLen.h \
+    fft/FFTRealFixLen.hpp \
+    fft/FFTRealFixLenParam.h \
+    fft/FFTRealPassDirect.h \
+    fft/FFTRealPassDirect.hpp \
+    fft/FFTRealPassInverse.h \
+    fft/FFTRealPassInverse.hpp \
+    fft/FFTRealSelect.h \
+    fft/FFTRealSelect.hpp \
+    fft/FFTRealUseTrigo.h \
+    fft/FFTRealUseTrigo.hpp \
+    fft/OscSinCos.h \
+    fft/OscSinCos.hpp \
+    mainwindow.h \
+    myfft.h \
+    files.h

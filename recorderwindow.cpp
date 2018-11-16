@@ -2,6 +2,9 @@
 
 RecorderWindow::RecorderWindow()
 {
+
+
+
     device = new SerialPort;
     statusBar = new QStatusBar;
     statusBar->setAutoFillBackground(1);
@@ -16,6 +19,8 @@ RecorderWindow::RecorderWindow()
     mainWindowTabWidget = new QTabWidget;
     mainWindowTabWidget->addTab(recordPageWidget,"Rejestracja");
     mainWindowTabWidget->addTab(fftPageWidget,"Analiza FFT");
+
+
 
     //Main Grid Layout, parent->recordPageWidget, contains left menu and right chart
     mainRecordLayout = new QGridLayout;
@@ -49,6 +54,7 @@ RecorderWindow::RecorderWindow()
 
             loadButton = new QPushButton;
             loadButton->setText("Wczytaj");
+            connect(loadButton,SIGNAL(clicked(bool)),this,SLOT(loadData()));
             saveButton = new QPushButton;
             saveButton->setText("Zapisz");
 
@@ -281,6 +287,32 @@ RecorderWindow::RecorderWindow()
 //-------------------------- END OF CHART AREA ------------------------------
 //---------------------------------------------------------------------------
 
+
+
+    //---------------------------------------------------------------------------
+    //--------------------------- START OF CHART AREA FFT -----------------------
+    //---------------------------------------------------------------------------
+
+    chartFFT = new Chart();
+    seriesFFT = new QLineSeries();
+
+    chartFFT2 = new Chart();
+    seriesFFT2 = new QLineSeries();
+
+    chartViewFFT = new ChartView(chartFFT);
+    chartViewFFT2 = new ChartView(chartFFT2);
+
+
+    mainFFTLayout = new QGridLayout;
+    mainFFTLayout->setColumnMinimumWidth(0,140);
+
+
+
+    //---------------------------------------------------------------------------
+    //-------------------------- END OF CHART AREA FFT --------------------------
+    //---------------------------------------------------------------------------
+
+
 // added left menu and chart to grid layout and nextly to tab widget
     mainRecordLayout->addLayout(mainMenuBoxLayout,0,0,1,1,Qt::AlignTop);
     mainRecordLayout->addWidget(chartView,0,1,1,1);
@@ -288,6 +320,8 @@ RecorderWindow::RecorderWindow()
 
     statusBar->showMessage("Ready");
     recordPageWidget->setLayout(mainRecordLayout);
+
+
 }
 
 
@@ -397,5 +431,121 @@ void RecorderWindow::paintSamples()
         chart->axisY()->setRange(-20,20);
         chart->axisX()->setRange(0,0.2);
     }
+
+   /*myFFT fftTab(2048);
+    float complex1[2048],real1[2048];
+    for(int i=0;i<2048;i++)real1[i] = (device->samplesIntVector[i]-1080);
+
+    fftTab.fft_object.do_fft(complex1,real1);
+
+    for (int i = 0; i < 1024; i++)
+    {
+        QPointF p((qreal)complex1[i], ((qreal)(complex1[i+1024])));
+        seriesFFT->append(p);
+    }
+
+    chartFFT->addSeries(seriesFFT);
+       chartFFT->createDefaultAxes();
+       */
+
+}
+
+void RecorderWindow::loadData()
+{
+     myFile.openFile();
+
+  /*   series->clear();
+     series2->clear();
+     chart->removeSeries(series);
+     chart->removeSeries(series2);
+
+     float x=0;
+     for (int i = 0; i < myFile.samples.size(); i++)
+     {
+         QPointF p((qreal)(x+=0.001), ((qreal)(myFile.samples[i])));
+         series->append(p);
+     }
+     chart->addSeries(series);
+     chart->addSeries(series2);
+
+     chart->createDefaultAxes();
+
+*/
+
+    obj.doFFT(myFile);
+
+
+    if(myFile.info.amountOfChannels==1)
+    {
+       seriesFFT->clear();
+       chartFFT->removeSeries(seriesFFT);
+
+
+       for (int i = 0; i < obj.xStep.size(); i++)
+       {
+           QPointF p((qreal)(obj.xStep[i]), ((qreal)obj.amplitude[i]));
+           seriesFFT->append(p);
+       }
+
+        chartFFT->addSeries(seriesFFT);
+        chartFFT->setTitle("Rozkład FFT");
+        chartFFT->setAnimationOptions(QChart::SeriesAnimations);
+        chartFFT->legend()->hide();
+        chartFFT->createDefaultAxes();
+        chartFFT->axisY()->setRange(0,obj.maxAmplitude);
+        chartFFT->axisX()->setRange(0,500);
+
+        chartViewFFT->setRenderHint(QPainter::Antialiasing);
+
+        mainFFTLayout->addWidget(chartViewFFT,0,0,1,1);
+        fftPageWidget->setLayout(mainFFTLayout);
+
+    }
+
+    if(myFile.info.amountOfChannels==2)
+    {
+       seriesFFT->clear();
+       seriesFFT2->clear();
+       chartFFT->removeSeries(seriesFFT);
+       chartFFT2->removeSeries(seriesFFT2);
+
+
+       for (int i = 0; i < obj.xStep.size(); i++)
+       {
+           QPointF p((qreal)(obj.xStep[i]), ((qreal)obj.amplitude[i]));
+           seriesFFT->append(p);
+
+           QPointF p2((qreal)(obj.xStep[i]), ((qreal)obj.amplitude2[i]));
+           seriesFFT2->append(p2);
+       }
+
+
+        chartFFT->addSeries(seriesFFT);
+        chartFFT->setTitle("Rozkład FFT");
+        chartFFT->setAnimationOptions(QChart::SeriesAnimations);
+        chartFFT->legend()->hide();
+        chartFFT->createDefaultAxes();
+        chartFFT->axisY()->setRange(0,obj.maxAmplitude);
+        chartFFT->axisX()->setRange(0,500);
+        chartViewFFT->setRenderHint(QPainter::Antialiasing);
+
+        chartFFT2->addSeries(seriesFFT2);
+        chartFFT2->setTitle(" Rozkład FFT");
+        chartFFT2->setAnimationOptions(QChart::SeriesAnimations);
+        chartFFT2->legend()->hide();
+        chartFFT2->createDefaultAxes();
+        chartFFT2->axisY()->setRange(0,obj.maxAmplitude2);
+        chartFFT2->axisX()->setRange(0,500);
+
+        chartViewFFT2->setRenderHint(QPainter::Antialiasing);
+
+        mainFFTLayout->addWidget(chartViewFFT,0,0,1,1);
+        mainFFTLayout->addWidget(chartViewFFT2,1,0,1,1);
+        fftPageWidget->setLayout(mainFFTLayout);
+
+    }
+
+
+
 
 }

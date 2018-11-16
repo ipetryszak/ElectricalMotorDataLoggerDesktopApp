@@ -15,10 +15,13 @@
 #include <QObject>
 #include <QStatusBar>
 #include <QAbstractAxis>
+#include <QScatterSeries>
 
 #include "chart.h"
 #include "chartview.h"
 #include "serialport.h"
+#include "myfft.h"
+#include "files.h"
 
 
 
@@ -36,16 +39,26 @@ public slots:
     void paintSamples();
     void disconnectedCorrectlyChanged();
     void rangeChanged();
+    void loadData();
 
 public:
     RecorderWindow();
 
+    myFFT obj;
+    Files myFile;
     QLineSeries *series;
     QLineSeries *series2;
+   // QLineSeries *seriesFFT;
+    QLineSeries *seriesFFT;
+    QLineSeries *seriesFFT2;
     SerialPort *device;
     QStatusBar *statusBar;
     Chart *chart;
     ChartView *chartView;
+    Chart *chartFFT;
+    Chart *chartFFT2;
+    ChartView *chartViewFFT;
+    ChartView *chartViewFFT2;
     int currentRange=0;
 
     //widgets that are included by mainWindowTabWidget, contains all layout and objects
@@ -55,6 +68,7 @@ public:
     QTabWidget *mainWindowTabWidget;
     //Main Grid Layout, parent->recordPageWidget, contains left menu and right chart
     QGridLayout *mainRecordLayout;
+     QGridLayout *mainFFTLayout;
     //first GroupBox in left menu, contains QVBoxLayot and widgets - buttons
     QGroupBox *startGroupBox;
     QGroupBox *pomiarGroupBox;

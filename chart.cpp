@@ -1,4 +1,3 @@
-
 #include "chart.h"
 #include <QtWidgets/QGesture>
 #include <QtWidgets/QGraphicsScene>
