@@ -315,7 +315,7 @@ RecorderWindow::RecorderWindow()
     chartFFT->setAnimationOptions(QChart::SeriesAnimations);
     chartFFT->legend()->hide();
     chartFFT->createDefaultAxes();
-    chartFFT->axisY()->setRange(0,obj.maxAmplitude);
+    chartFFT->axisY()->setRange(0,100);
     chartFFT->axisX()->setRange(0,500);
     chartViewFFT->setRenderHint(QPainter::Antialiasing);
 
@@ -324,7 +324,7 @@ RecorderWindow::RecorderWindow()
     chartFFT2->setAnimationOptions(QChart::SeriesAnimations);
     chartFFT2->legend()->hide();
     chartFFT2->createDefaultAxes();
-    chartFFT2->axisY()->setRange(0,obj.maxAmplitude2);
+    chartFFT2->axisY()->setRange(0,100);
     chartFFT2->axisX()->setRange(0,500);
 
     chartViewFFT2->setRenderHint(QPainter::Antialiasing);
@@ -477,101 +477,103 @@ void RecorderWindow::paintSamples()
 
 void RecorderWindow::loadData()
 {
-     myFile.openFile();
-     obj.doFFT(myFile);
+     myFile = new Files;
+     obj = new myFFT;
+
+     myFile->openFile();
+     obj->doFFT(myFile);
 
 
-    if(myFile.info.amountOfChannels==1)
+    if(myFile->info.amountOfChannels==1)
     {
 
         series->clear();
         series2->clear();
-        chart->removeSeries(series);
-        chart->removeSeries(series2);
 
-        float x=0;
-        for (int i = 0; i < myFile.samples.size(); i++)
+        float x = 0;
+        float step = 1;
+
+       if(myFile->info.samplingFrequency!=0) step = 1/(float)myFile->info.samplingFrequency;
+       else qDebug()<<"dzielenie przez zero";
+
+        for (int i = 0; i < myFile->samples.size(); i++)
         {
-            QPointF p((qreal)(x+=0.001), ((qreal)(myFile.samples[i])));
+            QPointF p((qreal)(x+=step), ((qreal)(myFile->samples[i])));
             series->append(p);
         }
-        chart->addSeries(series);
-        chart->addSeries(series2);
+
+
+        chart->createDefaultAxes();
+        chart->axisY()->setRange(myFile->generalMinAmplitude,
+                                 myFile->generalMaxAmplitude);
+        chart->axisX()->setRange(0,0.2);
 
        seriesFFT->clear();
-       chartFFT->removeSeries(seriesFFT);
 
-
-       for (int i = 0; i < obj.xStep.size(); i++)
+       for (int i = 0; i < obj->amountOfSamples/2; i++)
        {
-           QPointF p((qreal)(obj.xStep[i]), ((qreal)obj.amplitude[i]));
+           QPointF p((qreal)(obj->xStep[i]), ((qreal)obj->amplitude[i]));
            seriesFFT->append(p);
        }
 
-        chartFFT->addSeries(seriesFFT);
-        chartFFT->setTitle("Rozkład FFT");
-        chartFFT->setAnimationOptions(QChart::SeriesAnimations);
-        chartFFT->legend()->hide();
         chartFFT->createDefaultAxes();
-        chartFFT->axisY()->setRange(0,obj.maxAmplitude);
+        chartFFT->axisY()->setRange(0,obj->maxAmplitude);
         chartFFT->axisX()->setRange(0,500);
-
-        chartViewFFT->setRenderHint(QPainter::Antialiasing);
-
-        mainFFTLayout->addWidget(chartViewFFT,0,0,1,1);
-        fftPageWidget->setLayout(mainFFTLayout);
-
     }
 
-    if(myFile.info.amountOfChannels==2)
+    if(myFile->info.amountOfChannels==2)
     {
+
 
        if(series->count() != 0) series->clear();
        if(series2->count() != 0) series2->clear();
 
         float x = 0;
-        float step = 1/(float)myFile.info.samplingFrequency;
+        float step = 1;
 
-        for (int i = 0; i < myFile.samples2d.size(); i++)
+       if(myFile->info.samplingFrequency!=0) step = 1/(float)myFile->info.samplingFrequency;
+       else qDebug()<<"dzielenie przez zero";
+
+        for (int i = 0; i < myFile->samples.size(); i++)
         {
-            QPointF p((qreal)(x+=step), ((qreal)(myFile.samples2d[i].at(0))));
+            QPointF p((qreal)(x+=step), ((qreal)(myFile->samples[i])));
             series->append(p);
-            QPointF p1((qreal)(x+=step), ((qreal)(myFile.samples2d[i].at(1))));
+            QPointF p1((qreal)(x+=step), ((qreal)(myFile->samples2[i])));
             series2->append(p1);
         }
 
         chart->createDefaultAxes();
-        chart->axisY()->setRange(myFile.generalMinAmplitude,
-                                 myFile.generalMaxAmplitude);
+        chart->axisY()->setRange(myFile->generalMinAmplitude,
+                                 myFile->generalMaxAmplitude);
         chart->axisX()->setRange(0,0.2);
 
 
 
-       seriesFFT->clear();
-       seriesFFT2->clear();
+       if(seriesFFT->count()!=0)seriesFFT->clear();
+       if(seriesFFT2->count()!=0)seriesFFT2->clear();
 
 
-       for (int i = 0; i < obj.xStep.size(); i++)
+       for (int i = 0; i < obj->amountOfSamples/2; i++)
        {
-           QPointF p((qreal)(obj.xStep[i]), ((qreal)obj.amplitude[i]));
+           QPointF p((qreal)(obj->xStep[i]), ((qreal)obj->amplitude[i]));
            seriesFFT->append(p);
 
-           QPointF p2((qreal)(obj.xStep[i]), ((qreal)obj.amplitude2[i]));
+           QPointF p2((qreal)(obj->xStep[i]), ((qreal)obj->amplitude2[i]));
            seriesFFT2->append(p2);
        }
 
         chartFFT->createDefaultAxes();
-        chartFFT->axisY()->setRange(0,obj.maxAmplitude+0.25*obj.maxAmplitude);
-        chartFFT->axisX()->setRange(0,500);
+        chartFFT->axisY()->setRange(0,obj->maxAmplitude+0.25*obj->maxAmplitude);
+        chartFFT->axisX()->setRange(0,obj->xStep[obj->amountOfSamples/2-1]);
         chartFFT2->createDefaultAxes();
-        chartFFT2->axisY()->setRange(0,obj.maxAmplitude2+0.25*obj.maxAmplitude2);
-        chartFFT2->axisX()->setRange(0,500);
-
+        chartFFT2->axisY()->setRange(0,obj->maxAmplitude2+0.25*obj->maxAmplitude2);
+        chartFFT2->axisX()->setRange(0,obj->xStep[obj->amountOfSamples/2-1]);
 
 
     }
 
-
+  delete myFile;
+  delete  obj;
 
 
 }

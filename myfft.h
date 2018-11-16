@@ -11,21 +11,23 @@ class myFFT
 public:
     myFFT();
 
-    void doFFT(Files obj);
+    void doFFT(Files *obj);
 
     long amountOfSamples;
     float *complex;
     float *complex2; //second array is allocated when amount of channels is 2
+    float *module;
+    float *module2;
+    float *xStep;
+    float *amplitude;
+    float *amplitude2;
 
-    QVector<float> module;
-    QVector<float> module2;
-    QVector<float> amplitude;
-    QVector<float> amplitude2;
-    QVector<float> xStep;
+  //  QVector<float> xStep;
 
     float maxAmplitude;
     float maxAmplitude2;
 
+    ~myFFT();
 
 };
 

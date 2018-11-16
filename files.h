@@ -24,8 +24,9 @@ class Files
 public:
     Files();
 
-    QVector<QVector<float>> samples2d;
+   // QVector<QVector<float>> samples2d;
     QVector<float> samples;
+    QVector<float> samples2;
 
     float maxAmplitude;
     float maxAmplitude2;
@@ -48,6 +49,7 @@ public:
    QVector<float> inputFloatVect;
    struct content info;
 
+   ~Files();
 };
 
 #endif // FILES_H

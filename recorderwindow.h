@@ -44,11 +44,11 @@ public slots:
 public:
     RecorderWindow();
 
-    myFFT obj;
-    Files myFile;
+    myFFT *obj;
+    Files *myFile;
     QLineSeries *series;
     QLineSeries *series2;
-   // QLineSeries *seriesFFT;
+
     QLineSeries *seriesFFT;
     QLineSeries *seriesFFT2;
     SerialPort *device;

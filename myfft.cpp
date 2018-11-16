@@ -1,100 +1,157 @@
 #include "myfft.h"
 
-myFFT:: myFFT()
+myFFT::myFFT()
 {
     amountOfSamples = 1;
+    complex = nullptr;
+    complex2 = nullptr;
+    module = nullptr;
+    module2 = nullptr;
+    xStep = nullptr;
+    amplitude = nullptr;
+    amplitude2 = nullptr;
 }
 
 
-void myFFT::doFFT(Files obj)
+void myFFT::doFFT(Files *obj)
 {
-    if(obj.info.amountOfChannels==1) while(amountOfSamples<obj.samples.size())amountOfSamples*=2;
-    if(obj.info.amountOfChannels==2) while(amountOfSamples<obj.samples2d.size())amountOfSamples*=2;
+
+    while(amountOfSamples<obj->samples.size())amountOfSamples*=2;
     amountOfSamples/=2;
+
     qDebug()<<"choosen amount of samples: "<<amountOfSamples;
 
-    switch(obj.info.amountOfChannels)
+    switch(obj->info.amountOfChannels)
     {
-    case 1:
+   case 1:
     {
         ffft::FFTReal <float> *fft_object = new ffft::FFTReal<float>(amountOfSamples);
         complex = new float[amountOfSamples];
         float *real = new float[amountOfSamples];
-        for(int i=0;i<amountOfSamples;i++)real[i] = obj.samples[i];
+        module = new float[amountOfSamples/2];
+        xStep = new float[amountOfSamples/2];
+        amplitude = new float[amountOfSamples/2];
+
+        for(int i=0;i<amountOfSamples;i++)real[i] = obj->samples[i];
 
         fft_object->do_fft(complex,real);
 
         for(int i=0;i<amountOfSamples/2;i++)
         {
-            float tmp = sqrt(complex[i]*complex[i]+complex[i+amountOfSamples/2]*complex[i+amountOfSamples/2]);
-            module.push_back(tmp);
+          module[i] = sqrt(pow(complex[i],2)+pow(complex[i+amountOfSamples/2],2));
         }
 
-        float tmpStep = (float)obj.info.samplingFrequency/(float)amountOfSamples;
-        xStep.push_back(0);
-        for(int i=1;i<amountOfSamples/2;i++)xStep.push_back(xStep[i-1]+tmpStep);
+        float tmpStep = (float)obj->info.samplingFrequency/(float)amountOfSamples;
+
+
+        xStep[0] = 0;
+        for(int i=1;i<amountOfSamples/2;i++)xStep[i] = xStep[i-1]+tmpStep;
+
         for(int i=0;i<amountOfSamples/2;i++)
         {
-            float tmp = 2*module[i]/amountOfSamples;
-            amplitude.push_back(tmp);
+           amplitude[i] = 2*(module[i])/amountOfSamples;
         }
 
         maxAmplitude = amplitude[0];
-        for(int i=1;i<amplitude.size();i++) if(amplitude[i]>maxAmplitude) maxAmplitude = amplitude[i];
+        for(int i=1;i<amountOfSamples/2;i++)if(amplitude[i]>maxAmplitude) maxAmplitude = amplitude[i];
+
+        delete [] real;
+        real = nullptr;
+        delete fft_object;
+        fft_object = nullptr;
+
 
         break;
     }
     case 2:
     {
-        qDebug()<<"jestem";
+
         ffft::FFTReal <float> *fft_object = new ffft::FFTReal<float>(amountOfSamples);
         ffft::FFTReal <float> *fft_object2 = new ffft::FFTReal<float>(amountOfSamples);
         complex = new float[amountOfSamples];
         complex2 = new float[amountOfSamples];
         float *real = new float[amountOfSamples];
         float *real2 = new float[amountOfSamples];
+        module = new float[amountOfSamples/2];
+        module2 = new float[amountOfSamples/2];
+        xStep = new float[amountOfSamples/2];
+        amplitude = new float[amountOfSamples/2];
+        amplitude2 = new float[amountOfSamples/2];
 
-        for(int i=0;i<obj.samples2d.size();i++) real[i] = obj.samples2d[i].at(0);
-        for(int i=0;i<obj.samples2d.size();i++) real2[i] = obj.samples2d[i].at(1);
+        for(int i=0;i<amountOfSamples;i++) real[i] = obj->samples[i];
+        for(int i=0;i<amountOfSamples;i++) real2[i] = obj->samples2[i];
 
         qDebug()<<real2[0];
          fft_object->do_fft(complex,real);
          fft_object2->do_fft(complex2,real2);
 
-         for(int i=0;i<amountOfSamples/2;i++)
+         int halfAmountOfSamples = amountOfSamples/2;
+         qDebug()<<halfAmountOfSamples;
+
+
+         for(int i=0;i<halfAmountOfSamples;i++)
          {
-             float tmp = sqrt(complex[i]*complex[i]+complex[i+amountOfSamples/2]*complex[i+amountOfSamples/2]);
-             module.push_back(tmp);
-             float tmp2 = sqrt(complex2[i]*complex2[i]+complex2[i+amountOfSamples/2]*complex2[i+amountOfSamples/2]);
-             module2.push_back(tmp2);
+            qDebug()<<i<< " ";
+            module[i] = sqrt(pow(complex[i],2)+pow(complex[i+halfAmountOfSamples],2));
+            module2[i] = sqrt(pow(complex2[i],2)+pow(complex2[i+halfAmountOfSamples],2));
          }
 
-         float tmpStep = (float)obj.info.samplingFrequency/(float)amountOfSamples;
-         xStep.push_back(0);
-         for(int i=1;i<amountOfSamples/2;i++)xStep.push_back(xStep[i-1]+tmpStep);
+         float tmpStep;
+         if(amountOfSamples!=0)tmpStep = (float)obj->info.samplingFrequency/(float)amountOfSamples;
+
+         xStep[0] = 0;
+         for(int i=1;i<amountOfSamples/2;i++)xStep[i] = xStep[i-1]+tmpStep;
+
 
          for(int i=0;i<amountOfSamples/2;i++)
          {
-             float tmp = 2*module[i]/amountOfSamples;
-             amplitude.push_back(tmp);
-
-             tmp = 2*module2[i]/amountOfSamples;
-             amplitude2.push_back(tmp);
+            amplitude[i] = 2*(module[i])/amountOfSamples;
+            amplitude2[i] = 2*(module2[i])/amountOfSamples;
          }
 
          maxAmplitude = amplitude[0];
          maxAmplitude2 = amplitude2[0];
-         for(int i=1;i<amplitude.size();i++)
+         for(int i=1;i<amountOfSamples/2;i++)
          {
           if(amplitude[i]>maxAmplitude) maxAmplitude = amplitude[i];
           if(amplitude2[i]>maxAmplitude2) maxAmplitude2 = amplitude2[i];
          }
-         int i;
+
+
+
+
+         delete [] real;
+         real = nullptr;
+         delete [] real2;
+         real2 = nullptr;
+        delete fft_object;
+         fft_object = nullptr;
+         delete fft_object2;
+         fft_object2 = nullptr;
         break;
     }
 
     }
-
+qDebug()<<"at the end ok";
 
 }
 
+myFFT::~myFFT()
+{
+
+    if(complex!=nullptr)delete [] complex;
+    complex = nullptr;
+    if(complex2!=nullptr)delete [] complex2;
+    complex2 = nullptr;
+    if(module!=nullptr) delete [] module;
+    module = nullptr;
+   if(module2!=nullptr) delete [] module2;
+   module2 = nullptr;
+   if(xStep!=nullptr) delete [] xStep;
+   xStep = nullptr;
+    if(amplitude!=nullptr) delete [] amplitude;
+    amplitude = nullptr;
+    if(amplitude2!=nullptr) delete [] amplitude2;
+    amplitude2 = nullptr;
+
+}

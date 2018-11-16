@@ -61,6 +61,16 @@ void Files::openFile()
             samples.push_back(line.toFloat());
         }
         qDebug()<<samples;
+
+
+        maxAmplitude = samples[0];
+        for(int i=1;i<samples.size();i++) if(maxAmplitude<samples[i])maxAmplitude = samples[i];
+        minAmplitude = samples[0];
+        for(int i=1;i<samples.size();i++)if(minAmplitude>samples[i])minAmplitude = samples[i];
+        generalMaxAmplitude = maxAmplitude;
+        generalMinAmplitude = minAmplitude;
+
+
     }
     else if(info.amountOfChannels==2)
     {
@@ -74,28 +84,29 @@ void Files::openFile()
             tmp1.replace(',','.');
             tmp2.replace(',','.');
 
-            QVector<float> tmpV;
-            tmpV.push_back(tmp1.toFloat());
-            tmpV.push_back(tmp2.toFloat());
-            samples2d.push_back(tmpV);
+
+            samples.push_back(tmp1.toFloat());
+            samples2.push_back(tmp2.toFloat());
+
+            // samples2d.push_back(tmpV);
 
         }
 
         //find max amplitude
-        maxAmplitude = samples2d[0].at(0);
-        maxAmplitude2 = samples2d[0].at(1);
-        for(int i=1;i<samples2d.size();i++)
+        maxAmplitude = samples[0];
+        maxAmplitude2 = samples2[0];
+        for(int i=1;i<samples.size();i++)
         {
-            if(maxAmplitude<samples2d[i].at(0))maxAmplitude = samples2d[i].at(0);
-            if(maxAmplitude2<samples2d[i].at(1))maxAmplitude2 = samples2d[i].at(1);
+            if(maxAmplitude<samples[i])maxAmplitude = samples[i];
+            if(maxAmplitude2<samples2[i])maxAmplitude2 = samples2[i];
         }
 
-        minAmplitude = samples2d[0].at(0);
-        minAmplitude2 = samples2d[0].at(1);
-        for(int i=1;i<samples2d.size();i++)
+        minAmplitude = samples[0];
+        minAmplitude2 = samples2[0];
+        for(int i=1;i<samples.size();i++)
         {
-            if(minAmplitude>samples2d[i].at(0))minAmplitude = samples2d[i].at(0);
-            if(minAmplitude2<samples2d[i].at(1))minAmplitude2 = samples2d[i].at(1);
+            if(minAmplitude>samples[i])minAmplitude = samples[i];
+            if(minAmplitude2<samples2[i])minAmplitude2 = samples2[i];
         }
 
         generalMaxAmplitude = (maxAmplitude>maxAmplitude2) ? maxAmplitude : maxAmplitude2;
@@ -106,4 +117,15 @@ void Files::openFile()
 
     }
     else {}
+
+    file.close();
+
+
+    qDebug()<<"samples size "<<samples.size();
+    qDebug()<<"samples2 size "<<samples2.size();
+}
+
+Files::~Files()
+{
+
 }
