@@ -138,6 +138,48 @@ void Files::copyData(CurrentAllData *obj)
     obj->maxAmplitude = generalMaxAmplitude;
     obj->minAmplitude = generalMinAmplitude;
 }
+
+void Files::saveFile(CurrentAllData *obj)
+{
+    QString fileName = QFileDialog::getSaveFileName(0,QObject::tr("Zapisz"), "", QObject::tr("Text files (*.txt)"));
+
+    QFile file(fileName);
+    file.open(QIODevice::WriteOnly | QIODevice::Text);
+
+    if (fileName.isEmpty()) return;
+    else {
+
+         }
+
+
+    QTextStream out(&file);
+    out << obj->amountOfChannels<<endl
+        << obj->samplingFrequency<<endl
+        << obj->samplingPeriod<<endl
+        << obj->samplingRange<<endl<<endl;
+
+    if(obj->amountOfChannels==1)
+    {
+        for(int i=0;i<obj->samples1CH.size();i++)
+        {
+            out<<obj->samples1CH[i]<<endl;
+        }
+    }
+    else if(obj->amountOfChannels==2)
+    {
+        for(int i=0;i<obj->samples1CH.size();i++)
+        {
+            out<<obj->samples1CH[i]<<"\t"<<obj->samples2CH[i]<<endl;
+        }
+    }
+
+    file.flush();
+    file.close();
+
+}
+
+
+
 Files::~Files()
 {
 

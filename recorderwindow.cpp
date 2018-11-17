@@ -56,6 +56,7 @@ RecorderWindow::RecorderWindow()
             connect(loadButton,SIGNAL(clicked(bool)),this,SLOT(loadData()));
             saveButton = new QPushButton;
             saveButton->setText("Zapisz");
+            connect(saveButton,SIGNAL(clicked(bool)),this,SLOT(saveData()));
 
     //add objects to startMenuBoxLayout //QVBoxLayout
     startMenuBoxLayout->addWidget(connectButton);
@@ -579,3 +580,10 @@ void RecorderWindow::drawFFTChart(CurrentAllData *obj)
 
  }
 
+
+void RecorderWindow::saveData()
+{
+     myFile = new Files;
+     myFile->saveFile(currentData);
+     delete myFile;
+}

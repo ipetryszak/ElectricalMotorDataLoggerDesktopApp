@@ -41,6 +41,7 @@ public slots:
     void disconnectedCorrectlyChanged();
     void rangeChanged();
     void loadData();
+    void saveData();
 
 public:
     RecorderWindow();

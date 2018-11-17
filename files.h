@@ -48,6 +48,7 @@ public:
 
    void openFile();
    void copyData(CurrentAllData *obj);
+   void saveFile(CurrentAllData *obj);
 
    QVector<float> inputFloatVect;
    struct content info;
