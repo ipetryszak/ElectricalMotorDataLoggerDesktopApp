@@ -31,7 +31,8 @@ SOURCES += \
     serialport.cpp \
     mainwindow.cpp \
     myfft.cpp \
-    files.cpp
+    files.cpp \
+    currentalldata.cpp
 
 HEADERS += \
     chartview.h \
@@ -60,4 +61,5 @@ HEADERS += \
     fft/OscSinCos.hpp \
     mainwindow.h \
     myfft.h \
-    files.h
+    files.h \
+    currentalldata.h

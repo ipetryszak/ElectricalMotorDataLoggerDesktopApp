@@ -2,30 +2,22 @@
 #define MYFFT_H
 
 #include <QDebug>
+#include <QVector>
 
 #include "fft/FFTReal.h"
 #include "files.h"
+#include "currentalldata.h"
 
 class myFFT
 {
 public:
     myFFT();
 
+    void doFFT(CurrentAllData *obj);
     void doFFT(Files *obj);
+    void analyseFFT(QVector<float>, QVector<float> &, int amountOfFFTSamples,int freq, QVector<float> &,float &);
 
     long amountOfSamples;
-    float *complex;
-    float *complex2; //second array is allocated when amount of channels is 2
-    float *module;
-    float *module2;
-    float *xStep;
-    float *amplitude;
-    float *amplitude2;
-
-  //  QVector<float> xStep;
-
-    float maxAmplitude;
-    float maxAmplitude2;
 
     ~myFFT();
 

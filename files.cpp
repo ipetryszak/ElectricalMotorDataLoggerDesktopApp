@@ -12,7 +12,6 @@ Files::Files()
  * third row -> sampling period
  * fourth row -> range
  * sixth row - n row = samples
- *
  */
 
 /* Inputs float numbers should be in form ex. 2,33 row by row
@@ -125,6 +124,20 @@ void Files::openFile()
     qDebug()<<"samples2 size "<<samples2.size();
 }
 
+void Files::copyData(CurrentAllData *obj)
+{
+
+    obj->amountOfChannels = info.amountOfChannels;
+    obj->samplingFrequency = info.samplingFrequency;
+    obj->samplingPeriod = info.samplingPeriod;
+    obj->samplingRange = info.range;
+
+    obj->samples1CH = samples;
+    obj->samples2CH = samples2;
+
+    obj->maxAmplitude = generalMaxAmplitude;
+    obj->minAmplitude = generalMinAmplitude;
+}
 Files::~Files()
 {
 

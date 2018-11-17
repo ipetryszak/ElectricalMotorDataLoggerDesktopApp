@@ -2,8 +2,7 @@
 
 RecorderWindow::RecorderWindow()
 {
-
-
+    currentData = nullptr;
 
     device = new SerialPort;
     statusBar = new QStatusBar;
@@ -477,103 +476,106 @@ void RecorderWindow::paintSamples()
 
 void RecorderWindow::loadData()
 {
+    if(currentData!=nullptr)
+    {
+        delete currentData;
+        currentData = nullptr;
+    }
+
+    //allocate memory for data container
+     currentData = new CurrentAllData;
      myFile = new Files;
-     obj = new myFFT;
+     myFile->openFile(); //choose and open file
+     myFile->copyData(currentData); //copy data to object currentData class CurrentAllData
 
-     myFile->openFile();
-     obj->doFFT(myFile);
+     obj = new myFFT; //create myFFT object
+     obj->doFFT(currentData); //do FFT and results put in object currentData //class CurrentAllData
 
-
-    if(myFile->info.amountOfChannels==1)
-    {
-
-        series->clear();
-        series2->clear();
-
-        float x = 0;
-        float step = 1;
-
-       if(myFile->info.samplingFrequency!=0) step = 1/(float)myFile->info.samplingFrequency;
-       else qDebug()<<"dzielenie przez zero";
-
-        for (int i = 0; i < myFile->samples.size(); i++)
-        {
-            QPointF p((qreal)(x+=step), ((qreal)(myFile->samples[i])));
-            series->append(p);
-        }
-
-
-        chart->createDefaultAxes();
-        chart->axisY()->setRange(myFile->generalMinAmplitude,
-                                 myFile->generalMaxAmplitude);
-        chart->axisX()->setRange(0,0.2);
-
-       seriesFFT->clear();
-
-       for (int i = 0; i < obj->amountOfSamples/2; i++)
-       {
-           QPointF p((qreal)(obj->xStep[i]), ((qreal)obj->amplitude[i]));
-           seriesFFT->append(p);
-       }
-
-        chartFFT->createDefaultAxes();
-        chartFFT->axisY()->setRange(0,obj->maxAmplitude);
-        chartFFT->axisX()->setRange(0,500);
-    }
-
-    if(myFile->info.amountOfChannels==2)
-    {
-
-
-       if(series->count() != 0) series->clear();
-       if(series2->count() != 0) series2->clear();
-
-        float x = 0;
-        float step = 1;
-
-       if(myFile->info.samplingFrequency!=0) step = 1/(float)myFile->info.samplingFrequency;
-       else qDebug()<<"dzielenie przez zero";
-
-        for (int i = 0; i < myFile->samples.size(); i++)
-        {
-            QPointF p((qreal)(x+=step), ((qreal)(myFile->samples[i])));
-            series->append(p);
-            QPointF p1((qreal)(x+=step), ((qreal)(myFile->samples2[i])));
-            series2->append(p1);
-        }
-
-        chart->createDefaultAxes();
-        chart->axisY()->setRange(myFile->generalMinAmplitude,
-                                 myFile->generalMaxAmplitude);
-        chart->axisX()->setRange(0,0.2);
-
-
-
-       if(seriesFFT->count()!=0)seriesFFT->clear();
-       if(seriesFFT2->count()!=0)seriesFFT2->clear();
-
-
-       for (int i = 0; i < obj->amountOfSamples/2; i++)
-       {
-           QPointF p((qreal)(obj->xStep[i]), ((qreal)obj->amplitude[i]));
-           seriesFFT->append(p);
-
-           QPointF p2((qreal)(obj->xStep[i]), ((qreal)obj->amplitude2[i]));
-           seriesFFT2->append(p2);
-       }
-
-        chartFFT->createDefaultAxes();
-        chartFFT->axisY()->setRange(0,obj->maxAmplitude+0.25*obj->maxAmplitude);
-        chartFFT->axisX()->setRange(0,obj->xStep[obj->amountOfSamples/2-1]);
-        chartFFT2->createDefaultAxes();
-        chartFFT2->axisY()->setRange(0,obj->maxAmplitude2+0.25*obj->maxAmplitude2);
-        chartFFT2->axisX()->setRange(0,obj->xStep[obj->amountOfSamples/2-1]);
-
-
-    }
+     drawSinChart(currentData); //draw sinus/es charts
+     drawFFTChart(currentData); //draw fft charts
 
   delete myFile;
   delete  obj;
 
 
 }
+
+
+void RecorderWindow::drawSinChart(CurrentAllData *obj)
+{
+    if(series->count() != 0) series->clear();
+    if(series2->count() != 0) series2->clear();
+
+    float x = 0;
+    float step = 1;
+
+   if(obj->samplingFrequency!=0) step = 1/(float)obj->samplingFrequency;
+   else qDebug()<<"dzielenie przez zero";
+
+   if(obj->amountOfChannels==1)
+   {
+       for (int i = 0; i < myFile->samples.size(); i++)
+         {
+             QPointF p((qreal)(x+=step), ((qreal)(myFile->samples[i])));
+             series->append(p);
+         }
+   }
+   else if(obj->amountOfChannels==2)
+   {
+       for (int i = 0; i < myFile->samples.size(); i++)
+         {
+             QPointF p((qreal)(x+=step), ((qreal)(myFile->samples[i])));
+             series->append(p);
+             QPointF p1((qreal)(x+=step), ((qreal)(myFile->samples2[i])));
+             series2->append(p1);
+         }
+   }
+   else{}
+
+   chart->createDefaultAxes();
+   chart->axisY()->setRange(obj->minAmplitude,
+                            obj->maxAmplitude);
+   chart->axisX()->setRange(0,0.2);
+
+}
+
+void RecorderWindow::drawFFTChart(CurrentAllData *obj)
+{
+    if(seriesFFT->count()!=0)seriesFFT->clear();
+    if(seriesFFT2->count()!=0)seriesFFT2->clear();
+
+
+    if(obj->amountOfChannels==1)
+    {
+        for (int i = 0; i < obj->amplitudeCH1.size(); i++)
+        {
+            QPointF p((qreal)(obj->xAxis[i]), ((qreal)obj->amplitudeCH1[i]));
+            seriesFFT->append(p);
+        }
+    }
+    else if(obj->amountOfChannels==2)
+    {
+        for (int i = 0; i < obj->amplitudeCH1.size(); i++)
+        {
+            QPointF p((qreal)(obj->xAxis[i]), ((qreal)obj->amplitudeCH1[i]));
+            seriesFFT->append(p);
+
+            QPointF p2((qreal)(obj->xAxis[i]), ((qreal)obj->amplitudeCH2[i]));
+            seriesFFT2->append(p2);
+        }
+    }
+    else
+    {}
+
+     chartFFT->createDefaultAxes();
+     chartFFT->axisY()->setRange(0,obj->maxFFT1Amplitude+0.25*obj->maxFFT1Amplitude);
+     chartFFT->axisX()->setRange(0,obj->xAxis[obj->xAxis.size()-1]);
+   if(obj->amountOfChannels==2)
+      {
+     chartFFT2->createDefaultAxes();
+     chartFFT2->axisY()->setRange(0,obj->maxFFT2Amplitude+0.25*obj->maxFFT2Amplitude);
+     chartFFT2->axisX()->setRange(0,obj->xAxis[obj->xAxis.size()-1]);
+    }
+
+ }
+

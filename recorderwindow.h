@@ -22,6 +22,7 @@
 #include "serialport.h"
 #include "myfft.h"
 #include "files.h"
+#include "currentalldata.h"
 
 
 
@@ -43,6 +44,10 @@ public slots:
 
 public:
     RecorderWindow();
+    void drawSinChart(CurrentAllData *);
+    void drawFFTChart(CurrentAllData *);
+
+    CurrentAllData *currentData;
 
     myFFT *obj;
     Files *myFile;

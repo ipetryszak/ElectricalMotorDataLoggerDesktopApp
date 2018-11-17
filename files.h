@@ -7,6 +7,8 @@
 #include <QFileDialog>
 #include <QObject>
 
+#include "currentalldata.h"
+
 /*
  * STRUCT OF FILE WITH DATA
  * first row -> amount of channels
@@ -45,6 +47,7 @@ public:
     };
 
    void openFile();
+   void copyData(CurrentAllData *obj);
 
    QVector<float> inputFloatVect;
    struct content info;
