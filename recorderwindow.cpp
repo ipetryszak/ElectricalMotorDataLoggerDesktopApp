@@ -8,7 +8,7 @@ RecorderWindow::RecorderWindow()
     statusBar = new QStatusBar;
     statusBar->setAutoFillBackground(1);
 
-    connect(device,SIGNAL(gotSample()),this,SLOT(paintSamples()));
+    connect(device,SIGNAL(gotSample()),this,SLOT(loadReceivedSample()));
 
     //widgets with individual pages, MainWindowTabWidget consists of that
     recordPageWidget = new QWidget;
@@ -413,7 +413,7 @@ void RecorderWindow::paintSamples()
 
     qreal step = 0;
     qreal x=0;
-    if(channelsComboBox->currentIndex() == 0 | channelsComboBox->currentIndex() == 1)
+    if(channelsComboBox->currentIndex() == 0 || channelsComboBox->currentIndex() == 1)
     {
         int divideFactor=1;
         if(currentRange==0)divideFactor=1;
@@ -457,21 +457,7 @@ void RecorderWindow::paintSamples()
         chart->axisX()->setRange(0,0.2);
     }
 
-   /*myFFT fftTab(2048);
-    float complex1[2048],real1[2048];
-    for(int i=0;i<2048;i++)real1[i] = (device->samplesIntVector[i]-1080);
 
-    fftTab.fft_object.do_fft(complex1,real1);
-
-    for (int i = 0; i < 1024; i++)
-    {
-        QPointF p((qreal)complex1[i], ((qreal)(complex1[i+1024])));
-        seriesFFT->append(p);
-    }
-
-    chartFFT->addSeries(seriesFFT);
-       chartFFT->createDefaultAxes();
-       */
 
 }
 
@@ -489,14 +475,14 @@ void RecorderWindow::loadData()
      myFile->openFile(); //choose and open file
      myFile->copyData(currentData); //copy data to object currentData class CurrentAllData
 
-     obj = new myFFT; //create myFFT object
-     obj->doFFT(currentData); //do FFT and results put in object currentData //class CurrentAllData
+     fftObj = new myFFT; //create myFFT object
+     fftObj->doFFT(currentData); //do FFT and results put in object currentData //class CurrentAllData
 
      drawSinChart(currentData); //draw sinus/es charts
      drawFFTChart(currentData); //draw fft charts
 
   delete myFile;
-  delete  obj;
+  delete  fftObj;
 
 
 }
@@ -515,25 +501,28 @@ void RecorderWindow::drawSinChart(CurrentAllData *obj)
 
    if(obj->amountOfChannels==1)
    {
-       for (int i = 0; i < myFile->samples.size(); i++)
+       for (int i = 0; i < obj->samples1CH.size(); i++)
          {
-             QPointF p((qreal)(x+=step), ((qreal)(myFile->samples[i])));
+             QPointF p((qreal)(x+=step), ((qreal)(obj->samples1CH[i]/obj->samplingRange)));
              series->append(p);
          }
    }
    else if(obj->amountOfChannels==2)
    {
-       for (int i = 0; i < myFile->samples.size(); i++)
+       for (int i = 0; i < obj->samples1CH.size(); i++)
          {
-             QPointF p((qreal)(x+=step), ((qreal)(myFile->samples[i])));
+             QPointF p((qreal)(x+=step), ((qreal)(obj->samples1CH[i]/obj->samplingRange)));
              series->append(p);
-             QPointF p1((qreal)(x+=step), ((qreal)(myFile->samples2[i])));
+             QPointF p1((qreal)(x+=step), ((qreal)(obj->samples2CH[i]/obj->samplingRange)));
              series2->append(p1);
          }
    }
    else{}
 
+   series->setName("CH1");
+   series2->setName("CH2");
    chart->createDefaultAxes();
+   if(obj->amountOfChannels==2)chart->legend()->show();
    chart->axisY()->setRange(obj->minAmplitude,
                             obj->maxAmplitude);
    chart->axisX()->setRange(0,0.2);
@@ -583,7 +572,54 @@ void RecorderWindow::drawFFTChart(CurrentAllData *obj)
 
 void RecorderWindow::saveData()
 {
+    if(currentData==nullptr)return;
      myFile = new Files;
      myFile->saveFile(currentData);
      delete myFile;
+}
+
+void RecorderWindow::loadReceivedSample()
+{
+    if(currentData!=nullptr)
+    {
+        delete currentData;
+        currentData = nullptr;
+    }
+
+    //allocate memory for data container
+     currentData = new CurrentAllData;
+
+//-----------basic infos about samples--------------------------------
+
+     //save amount of channels
+     if(channelsComboBox->currentIndex() == 0 || channelsComboBox->currentIndex() == 1) currentData->amountOfChannels = 1;
+     else if(channelsComboBox->currentIndex() == 2) currentData->amountOfChannels = 2;
+
+     //save sampling frequency
+     currentData->samplingFrequency = (samplingComboBox->currentIndex()+1)*1000;
+
+     //save sampling period
+     currentData->samplingPeriod = timeComboBox->currentIndex()+1;
+
+     //save sampling range
+     if(currentRange==0)currentData->samplingRange = 1;
+     if(currentRange==1)currentData->samplingRange = 10;
+     if(currentRange==2)currentData->samplingRange = 100;
+
+//----------end of basic infos about samples---------------------------
+
+     device->copyData(currentData);
+
+     qDebug()<<currentData->samples1CH;
+     qDebug()<<currentData->amountOfChannels;
+
+
+     fftObj = new myFFT; //create myFFT object
+     fftObj->doFFT(currentData); //do FFT and results put in object currentData //class CurrentAllData
+
+     drawSinChart(currentData); //draw sinus/es charts
+     drawFFTChart(currentData); //draw fft charts
+
+     delete fftObj;
+
 }

@@ -42,6 +42,7 @@ public slots:
     void rangeChanged();
     void loadData();
     void saveData();
+    void loadReceivedSample();
 
 public:
     RecorderWindow();
@@ -50,7 +51,7 @@ public:
 
     CurrentAllData *currentData;
 
-    myFFT *obj;
+    myFFT *fftObj;
     Files *myFile;
     QLineSeries *series;
     QLineSeries *series2;

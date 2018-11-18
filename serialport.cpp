@@ -110,3 +110,59 @@ void SerialPort::readData()
         emit gotSample();
      }
 }
+
+
+void SerialPort::copyData(CurrentAllData *obj)
+{
+    if(obj->amountOfChannels==1)
+    {
+        for(int i=0;i<samplesIntVector.size();i++) obj->samples1CH.push_back((float)(samplesIntVector[i]-900));
+    }
+    else if(obj->amountOfChannels==2)
+    {
+        for(int i=0;i<samplesIntVector.size()-1;i++)
+        {
+            obj->samples1CH.push_back((float)(samplesIntVector[i++]-900));
+            obj->samples2CH.push_back((float)(samplesIntVector[i]-900));
+        }
+    }
+    else{}
+
+//---------------find max min amplitude--------------------------------------------------
+   float tmpMaxAmplitude = obj->samples1CH[0];
+   float tmpMaxAmplitude2 = obj->samples2CH[0];
+    for(int i=1;i<obj->samples1CH.size()-2;i++)
+    {
+        if(tmpMaxAmplitude<obj->samples1CH[i])tmpMaxAmplitude = obj->samples1CH[i];
+        if(tmpMaxAmplitude2<obj->samples2CH[i])tmpMaxAmplitude2 = obj->samples2CH[i];
+    }
+
+    float tmpMinAmplitude = obj->samples1CH[0];
+    float tmpMinAmplitude2 = obj->samples2CH[0];
+    for(int i=1;i<obj->samples1CH.size()-2;i++)
+    {
+        if(tmpMinAmplitude>obj->samples1CH[i])tmpMinAmplitude = obj->samples1CH[i];
+       if(tmpMinAmplitude2>obj->samples2CH[i])tmpMinAmplitude2 = obj->samples2CH[i];
+    }
+
+    if(obj->amountOfChannels==1)
+    {
+        obj->maxAmplitude = tmpMaxAmplitude/obj->samplingRange;
+        obj->minAmplitude = tmpMinAmplitude/obj->samplingRange;
+    }
+    else if(obj->amountOfChannels==2)
+    {
+
+        obj->maxAmplitude = (tmpMaxAmplitude>tmpMaxAmplitude2) ? tmpMaxAmplitude : tmpMaxAmplitude2;
+        obj->minAmplitude = (tmpMinAmplitude<tmpMinAmplitude2) ? tmpMinAmplitude : tmpMinAmplitude2;
+        obj->maxAmplitude/=obj->samplingRange;
+        obj->minAmplitude/=obj->samplingRange;
+
+        qDebug()<<"================================================="<<obj->samples1CH<<"------------------------"<<obj->samples2CH<<"------------";
+        qDebug()<<"max amp "<<obj->maxAmplitude<<" min amp "<<obj->minAmplitude;
+    }
+    else {}
+
+
+
+}

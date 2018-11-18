@@ -8,6 +8,8 @@
 #include <QStringList>
 #include <QDebug>
 
+#include "currentalldata.h"
+
 class SerialPort : public QObject
 {
     Q_OBJECT
@@ -25,6 +27,7 @@ public slots:
 public:
     SerialPort();
     void send(QString data);
+    void copyData(CurrentAllData *obj);
 
     QSerialPort *myDevice;
     QStringList BufferSplit;
