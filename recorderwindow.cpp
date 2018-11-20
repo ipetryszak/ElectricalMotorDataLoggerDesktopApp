@@ -2,14 +2,271 @@
 
 RecorderWindow::RecorderWindow()
 {
+    //pointer set to null (container with all data)
     currentData = nullptr;
 
     device = new SerialPort;
     statusBar = new QStatusBar;
     statusBar->setAutoFillBackground(1);
 
-    connect(device,SIGNAL(gotSample()),this,SLOT(loadReceivedSample()));
+    createLayout();
 
+    //all signals and slots
+    //signal from device
+    connect(device,SIGNAL(gotSample()),this,SLOT(loadReceivedSample()));
+    connect(this,SIGNAL(newSample()),this,SLOT(currentMaxMinRMSChanged()));
+    //buttons signals
+    connect(connectButton,SIGNAL(clicked(bool)),device,SLOT(connectWithDevice()));
+    connect(loadButton,SIGNAL(clicked(bool)),this,SLOT(loadData()));
+    connect(saveButton,SIGNAL(clicked(bool)),this,SLOT(saveData()));
+    connect(startButton,SIGNAL(clicked(bool)),this,SLOT(startChanged()));
+    //combo boxes signals
+    connect(samplingComboBox,SIGNAL(activated(int)),this,SLOT(samplingChanged()));
+    connect(channelsComboBox,SIGNAL(activated(int)),this,SLOT(channelChanged()));
+    connect(rangeComboBox,SIGNAL(activated(int)),this,SLOT(rangeChanged()));
+    //infos in status bar
+    connect(device,SIGNAL(connected()),this,SLOT(connectedChanged()));
+    connect(device,SIGNAL(noConnected()),this,SLOT(noConnectedChanged()));
+    connect(device,SIGNAL(disconnectedCorrectly()),this,SLOT(disconnectedCorrectlyChanged()));
+
+}
+
+
+void RecorderWindow::connectedChanged()
+{
+    connectButton->setText("Rozłącz");
+    statusBar->showMessage("Znaleziono urządzenie i połączono");
+}
+void RecorderWindow::noConnectedChanged()
+{
+    connectButton->setText("Połącz");
+    statusBar->showMessage("Nie znaleziono urządzenia - podłącz urządzenie i spróbuj ponownie");
+}
+
+void RecorderWindow::disconnectedCorrectlyChanged()
+{
+    connectButton->setText("Połącz");
+    statusBar->showMessage("Rozłączono urządzenie - kliknij połącz aby połączyć ponownie");
+}
+
+void RecorderWindow::channelChanged()
+{
+
+    QStringList channels = {"C1!","C2!","C3!"};
+    device->send(channels.at(channelsComboBox->currentIndex()));
+}
+
+void RecorderWindow::rangeChanged()
+{
+    currentRange = rangeComboBox->currentIndex();
+}
+
+void RecorderWindow::samplingChanged()
+{
+    QStringList sampling = {"F0!","F1!","F2!","F3!","F4!","F5!","F6!","F7!","F8!","F9!"};
+    device->send(sampling.at(samplingComboBox->currentIndex()));
+    device->samplingFrequency = (samplingComboBox->currentIndex()+1)*1000;
+    QString tmp;
+    tmp.append(QString::number(device->samplingFrequency,10));
+    tmp.append(" Hz");
+    samplingFrequencyLabel->setText(tmp);
+
+}
+
+void RecorderWindow::timeChanged()
+{
+    QStringList time = {"T0!","T1!","T2!","T3!","T4!","T5!","T6!","T7!","T8!","T9!"};
+    device->send(time.at(timeComboBox->currentIndex()));
+}
+
+void RecorderWindow::startChanged()
+{
+    device->send("S2!");
+}
+
+void RecorderWindow::currentMaxMinRMSChanged()
+{
+    QString tmp;
+    tmp.append(QString::number((int)currentData->minAmplitude,10));
+    tmp.append(" A");
+    currentIminLabel->setText(tmp);
+
+    tmp.clear();
+    tmp.append(QString::number((int)currentData->maxAmplitude,10));
+    tmp.append(" A");
+    currentImaxLabel->setText(tmp);
+
+    tmp.clear();
+    tmp.append(QString::number((int)(currentData->maxAmplitude/sqrt(2)),10));
+    tmp.append(" A");
+    currentRMSLabel->setText(tmp);
+}
+void RecorderWindow::loadData()
+{
+    if(currentData!=nullptr)
+    {
+        delete currentData;
+        currentData = nullptr;
+    }
+
+    //allocate memory for data container
+     currentData = new CurrentAllData;
+     myFile = new Files;
+     myFile->openFile(); //choose and open file
+     myFile->copyData(currentData); //copy data to object currentData class CurrentAllData
+
+     fftObj = new myFFT; //create myFFT object
+     fftObj->doFFT(currentData); //do FFT and results put in object currentData //class CurrentAllData
+
+     drawSinChart(currentData); //draw sinus/es charts
+     drawFFTChart(currentData); //draw fft charts
+
+  delete myFile;
+  delete  fftObj;
+
+
+}
+
+
+void RecorderWindow::drawSinChart(CurrentAllData *obj)
+{
+    if(series->count() != 0) series->clear();
+    if(series2->count() != 0) series2->clear();
+
+    float x = 0;
+    float step = 1;
+
+   if(obj->samplingFrequency!=0) step = 1/(float)obj->samplingFrequency;
+   else qDebug()<<"dzielenie przez zero";
+
+   if(obj->amountOfChannels==1)
+   {
+       for (int i = 0; i < obj->samples1CH.size(); i++)
+         {
+             QPointF p((qreal)(x+=step), ((qreal)(obj->samples1CH[i])));
+             series->append(p);
+         }
+   }
+   else if(obj->amountOfChannels==2)
+   {
+       for (int i = 0; i < obj->samples1CH.size(); i++)
+         {
+             QPointF p((qreal)(x+=step), ((qreal)(obj->samples1CH[i])));
+             series->append(p);
+             QPointF p1((qreal)(x+=step), ((qreal)(obj->samples2CH[i])));
+             series2->append(p1);
+         }
+   }
+   else{}
+
+   series->setName("CH1");
+   series2->setName("CH2");
+   chart->createDefaultAxes();
+   if(obj->amountOfChannels==2)chart->legend()->show();
+   chart->axisY()->setRange(obj->minAmplitude,
+                            obj->maxAmplitude);
+   chart->axisX()->setRange(0,0.2);
+
+}
+
+void RecorderWindow::drawFFTChart(CurrentAllData *obj)
+{
+    if(seriesFFT->count()!=0)seriesFFT->clear();
+    if(seriesFFT2->count()!=0)seriesFFT2->clear();
+
+
+    if(obj->amountOfChannels==1)
+    {
+        for (int i = 0; i < obj->amplitudeCH1.size(); i++)
+        {
+            QPointF p((qreal)(obj->xAxis[i]), ((qreal)obj->amplitudeCH1[i]));
+            seriesFFT->append(p);
+        }
+    }
+    else if(obj->amountOfChannels==2)
+    {
+        for (int i = 0; i < obj->amplitudeCH1.size(); i++)
+        {
+            QPointF p((qreal)(obj->xAxis[i]), ((qreal)obj->amplitudeCH1[i]));
+            seriesFFT->append(p);
+
+            QPointF p2((qreal)(obj->xAxis[i]), ((qreal)obj->amplitudeCH2[i]));
+            seriesFFT2->append(p2);
+        }
+    }
+    else
+    {}
+
+     chartFFT->createDefaultAxes();
+     chartFFT->axisY()->setRange(0,obj->maxFFT1Amplitude+0.25*obj->maxFFT1Amplitude);
+     chartFFT->axisX()->setRange(0,obj->xAxis[obj->xAxis.size()-1]);
+   if(obj->amountOfChannels==2)
+      {
+     chartFFT2->createDefaultAxes();
+     chartFFT2->axisY()->setRange(0,obj->maxFFT2Amplitude+0.25*obj->maxFFT2Amplitude);
+     chartFFT2->axisX()->setRange(0,obj->xAxis[obj->xAxis.size()-1]);
+    }
+
+ }
+
+
+void RecorderWindow::saveData()
+{
+    if(currentData==nullptr)return;
+     myFile = new Files;
+     myFile->saveFile(currentData);
+     delete myFile;
+}
+
+void RecorderWindow::loadReceivedSample()
+{
+    if(currentData!=nullptr)
+    {
+        delete currentData;
+        currentData = nullptr;
+    }
+
+    //allocate memory for data container
+     currentData = new CurrentAllData;
+
+//-----------basic infos about samples--------------------------------
+
+     //save amount of channels
+     if(channelsComboBox->currentIndex() == 0 || channelsComboBox->currentIndex() == 1) currentData->amountOfChannels = 1;
+     else if(channelsComboBox->currentIndex() == 2) currentData->amountOfChannels = 2;
+
+     //save sampling frequency
+     currentData->samplingFrequency = (samplingComboBox->currentIndex()+1)*1000;
+
+     //save sampling period
+     currentData->samplingPeriod = timeComboBox->currentIndex()+1;
+
+     //save sampling range
+     if(currentRange==0)currentData->samplingRange = 1;
+     if(currentRange==1)currentData->samplingRange = 10;
+     if(currentRange==2)currentData->samplingRange = 100;
+
+//----------end of basic infos about samples---------------------------
+
+     device->copyData(currentData);
+
+     qDebug()<<currentData->samples1CH;
+     qDebug()<<currentData->amountOfChannels;
+
+
+     fftObj = new myFFT; //create myFFT object
+     fftObj->doFFT(currentData); //do FFT and results put in object currentData //class CurrentAllData
+
+     drawSinChart(currentData); //draw sinus/es charts
+     drawFFTChart(currentData); //draw fft charts
+
+     delete fftObj;
+     emit newSample();
+
+}
+
+void RecorderWindow::createLayout()
+{
     //widgets with individual pages, MainWindowTabWidget consists of that
     recordPageWidget = new QWidget;
     fftPageWidget = new QWidget;
@@ -46,17 +303,13 @@ RecorderWindow::RecorderWindow()
 
             connectButton = new QPushButton;
             connectButton->setText("Połącz");
-            connect(connectButton,SIGNAL(clicked(bool)),device,SLOT(connectWithDevice()));
-            connect(device,SIGNAL(connected()),this,SLOT(connectedChanged()));
-            connect(device,SIGNAL(noConnected()),this,SLOT(noConnectedChanged()));
-            connect(device,SIGNAL(disconnectedCorrectly()),this,SLOT(disconnectedCorrectlyChanged()));
 
             loadButton = new QPushButton;
             loadButton->setText("Wczytaj");
-            connect(loadButton,SIGNAL(clicked(bool)),this,SLOT(loadData()));
+
             saveButton = new QPushButton;
             saveButton->setText("Zapisz");
-            connect(saveButton,SIGNAL(clicked(bool)),this,SLOT(saveData()));
+
 
     //add objects to startMenuBoxLayout //QVBoxLayout
     startMenuBoxLayout->addWidget(connectButton);
@@ -92,7 +345,7 @@ RecorderWindow::RecorderWindow()
            channelsStringList->append("CH1 i CH2");
 
            channelsComboBox->addItems(*channelsStringList);
-           connect(channelsComboBox,SIGNAL(activated(int)),this,SLOT(channelChanged()));
+
 
     //----- end of channels position ----------------------
 
@@ -115,7 +368,7 @@ RecorderWindow::RecorderWindow()
            samplingStringList->append("10 kHz");
 
            samplingComboBox->addItems(*samplingStringList);
-           connect(samplingComboBox,SIGNAL(activated(int)),this,SLOT(samplingChanged()));
+
 
     //----- end of częstotliwość próbkowania position -----
 
@@ -153,26 +406,18 @@ RecorderWindow::RecorderWindow()
            rangeStringList->append("10 mV/A");
            rangeStringList->append("100 mV/A");
 
-           connect(rangeComboBox,SIGNAL(activated(int)),this,SLOT(rangeChanged()));
+
            rangeComboBox->addItems(*rangeStringList);
 
      //---- end of zakres position -----------------------
 
     //---- start of tryb pomiaru -------------------------
 
-           howStartLabel = new QLabel;
-           howStartComboBox = new QComboBox;
-           howStartStringList = new QStringList;
+          startButton = new QPushButton;
+          startLabel = new QLabel;
+          startLabel->setText("Rozpocznij pomiar ");
+          startButton->setText("START");
 
-           howStartLabel->setText("Tryb pomiaru ");
-           howStartStringList->append("");
-           howStartStringList->append("START");
-           howStartStringList->append("Zbocze narastające");
-
-
-           howStartComboBox->addItems(*howStartStringList);
-
-           connect(howStartComboBox,SIGNAL(activated(int)),this,SLOT(howStartChanged()));
 
      //------ end of tryb pomiaru --------------------------
 
@@ -185,8 +430,8 @@ RecorderWindow::RecorderWindow()
     pomiarMenuBoxLayout->addWidget(timeComboBox);
     pomiarMenuBoxLayout->addWidget(rangeLabel);
     pomiarMenuBoxLayout->addWidget(rangeComboBox);
-    pomiarMenuBoxLayout->addWidget(howStartLabel);
-    pomiarMenuBoxLayout->addWidget(howStartComboBox);
+    pomiarMenuBoxLayout->addWidget(startLabel);
+    pomiarMenuBoxLayout->addWidget(startButton);
 
     pomiarGroupBox->setLayout(pomiarMenuBoxLayout);
 
@@ -346,280 +591,5 @@ RecorderWindow::RecorderWindow()
     statusBar->showMessage("Ready");
     recordPageWidget->setLayout(mainRecordLayout);
 
-
-}
-
-
-void RecorderWindow::connectedChanged()
-{
-    connectButton->setText("Rozłącz");
-    statusBar->showMessage("Znaleziono urządzenie i połączono");
-}
-void RecorderWindow::noConnectedChanged()
-{
-    connectButton->setText("Połącz");
-    statusBar->showMessage("Nie znaleziono urządzenia - podłącz urządzenie i spróbuj ponownie");
-}
-
-void RecorderWindow::disconnectedCorrectlyChanged()
-{
-    connectButton->setText("Połącz");
-    statusBar->showMessage("Rozłączono urządzenie - kliknij połącz aby połączyć ponownie");
-}
-
-void RecorderWindow::channelChanged()
-{
-
-    QStringList channels = {"C1!","C2!","C3!"};
-    device->send(channels.at(channelsComboBox->currentIndex()));
-}
-
-void RecorderWindow::rangeChanged()
-{
-    currentRange = rangeComboBox->currentIndex();
-}
-
-void RecorderWindow::samplingChanged()
-{
-    QStringList sampling = {"F0!","F1!","F2!","F3!","F4!","F5!","F6!","F7!","F8!","F9!"};
-    device->send(sampling.at(samplingComboBox->currentIndex()));
-    device->samplingFrequency = (samplingComboBox->currentIndex()+1)*1000;
-    QString tmp;
-    tmp.append(QString::number(device->samplingFrequency,10));
-    tmp.append(" Hz");
-    samplingFrequencyLabel->setText(tmp);
-
-}
-
-void RecorderWindow::timeChanged()
-{
-    QStringList time = {"T0!","T1!","T2!","T3!","T4!","T5!","T6!","T7!","T8!","T9!"};
-    device->send(time.at(timeComboBox->currentIndex()));
-}
-
-void RecorderWindow::howStartChanged()
-{
-    QStringList start = {"","S1!","S2!"};
-    device->send(start.at(howStartComboBox->currentIndex()));
-}
-
-void RecorderWindow::paintSamples()
-{
-
-    series->clear();
-    series2->clear();
-    chart->removeSeries(series);
-    chart->removeSeries(series2);
-
-    qreal step = 0;
-    qreal x=0;
-    if(channelsComboBox->currentIndex() == 0 || channelsComboBox->currentIndex() == 1)
-    {
-        int divideFactor=1;
-        if(currentRange==0)divideFactor=1;
-        if(currentRange==1)divideFactor=10;
-        if(currentRange==2)divideFactor=100;
-        if(device->samplingFrequency!=0)step = (1/(qreal)(device->samplingFrequency));
-
-        for (int i = 0; i < device->samplesIntVector.size(); i++)
-        {
-            QPointF p(x+=step, ((qreal)(device->samplesIntVector[i]-1080))/(divideFactor));
-            series->append(p);
-        }
-    }
-    else if(channelsComboBox->currentIndex()==2)
-    {
-        if(device->samplingFrequency!=0)step = (1/(qreal)((device->samplingFrequency)));
-        for (int i = 0; i < device->samplesIntVector.size()-1; i+=2)
-        {
-            QPointF p(x+=step, device->samplesIntVector[i]/10);
-            QPointF r(x,device->samplesIntVector[i+1]/10);
-            series->append(p);
-            series2->append(r);
-        }
-    }
-
-
-
-    chart->addSeries(series);
-    chart->addSeries(series2);
-
-    chart->createDefaultAxes();
-
-    if(currentRange==1)
-    {
-        chart->axisY()->setRange(-80,80);
-        chart->axisX()->setRange(0,0.2);
-    }
-    if(currentRange==2)
-    {
-        chart->axisY()->setRange(-20,20);
-        chart->axisX()->setRange(0,0.2);
-    }
-
-
-
-}
-
-void RecorderWindow::loadData()
-{
-    if(currentData!=nullptr)
-    {
-        delete currentData;
-        currentData = nullptr;
-    }
-
-    //allocate memory for data container
-     currentData = new CurrentAllData;
-     myFile = new Files;
-     myFile->openFile(); //choose and open file
-     myFile->copyData(currentData); //copy data to object currentData class CurrentAllData
-
-     fftObj = new myFFT; //create myFFT object
-     fftObj->doFFT(currentData); //do FFT and results put in object currentData //class CurrentAllData
-
-     drawSinChart(currentData); //draw sinus/es charts
-     drawFFTChart(currentData); //draw fft charts
-
-  delete myFile;
-  delete  fftObj;
-
-
-}
-
-
-void RecorderWindow::drawSinChart(CurrentAllData *obj)
-{
-    if(series->count() != 0) series->clear();
-    if(series2->count() != 0) series2->clear();
-
-    float x = 0;
-    float step = 1;
-
-   if(obj->samplingFrequency!=0) step = 1/(float)obj->samplingFrequency;
-   else qDebug()<<"dzielenie przez zero";
-
-   if(obj->amountOfChannels==1)
-   {
-       for (int i = 0; i < obj->samples1CH.size(); i++)
-         {
-             QPointF p((qreal)(x+=step), ((qreal)(obj->samples1CH[i]/obj->samplingRange)));
-             series->append(p);
-         }
-   }
-   else if(obj->amountOfChannels==2)
-   {
-       for (int i = 0; i < obj->samples1CH.size(); i++)
-         {
-             QPointF p((qreal)(x+=step), ((qreal)(obj->samples1CH[i]/obj->samplingRange)));
-             series->append(p);
-             QPointF p1((qreal)(x+=step), ((qreal)(obj->samples2CH[i]/obj->samplingRange)));
-             series2->append(p1);
-         }
-   }
-   else{}
-
-   series->setName("CH1");
-   series2->setName("CH2");
-   chart->createDefaultAxes();
-   if(obj->amountOfChannels==2)chart->legend()->show();
-   chart->axisY()->setRange(obj->minAmplitude,
-                            obj->maxAmplitude);
-   chart->axisX()->setRange(0,0.2);
-
-}
-
-void RecorderWindow::drawFFTChart(CurrentAllData *obj)
-{
-    if(seriesFFT->count()!=0)seriesFFT->clear();
-    if(seriesFFT2->count()!=0)seriesFFT2->clear();
-
-
-    if(obj->amountOfChannels==1)
-    {
-        for (int i = 0; i < obj->amplitudeCH1.size(); i++)
-        {
-            QPointF p((qreal)(obj->xAxis[i]), ((qreal)obj->amplitudeCH1[i]));
-            seriesFFT->append(p);
-        }
-    }
-    else if(obj->amountOfChannels==2)
-    {
-        for (int i = 0; i < obj->amplitudeCH1.size(); i++)
-        {
-            QPointF p((qreal)(obj->xAxis[i]), ((qreal)obj->amplitudeCH1[i]));
-            seriesFFT->append(p);
-
-            QPointF p2((qreal)(obj->xAxis[i]), ((qreal)obj->amplitudeCH2[i]));
-            seriesFFT2->append(p2);
-        }
-    }
-    else
-    {}
-
-     chartFFT->createDefaultAxes();
-     chartFFT->axisY()->setRange(0,obj->maxFFT1Amplitude+0.25*obj->maxFFT1Amplitude);
-     chartFFT->axisX()->setRange(0,obj->xAxis[obj->xAxis.size()-1]);
-   if(obj->amountOfChannels==2)
-      {
-     chartFFT2->createDefaultAxes();
-     chartFFT2->axisY()->setRange(0,obj->maxFFT2Amplitude+0.25*obj->maxFFT2Amplitude);
-     chartFFT2->axisX()->setRange(0,obj->xAxis[obj->xAxis.size()-1]);
-    }
-
- }
-
-
-void RecorderWindow::saveData()
-{
-    if(currentData==nullptr)return;
-     myFile = new Files;
-     myFile->saveFile(currentData);
-     delete myFile;
-}
-
-void RecorderWindow::loadReceivedSample()
-{
-    if(currentData!=nullptr)
-    {
-        delete currentData;
-        currentData = nullptr;
-    }
-
-    //allocate memory for data container
-     currentData = new CurrentAllData;
-
-//-----------basic infos about samples--------------------------------
-
-     //save amount of channels
-     if(channelsComboBox->currentIndex() == 0 || channelsComboBox->currentIndex() == 1) currentData->amountOfChannels = 1;
-     else if(channelsComboBox->currentIndex() == 2) currentData->amountOfChannels = 2;
-
-     //save sampling frequency
-     currentData->samplingFrequency = (samplingComboBox->currentIndex()+1)*1000;
-
-     //save sampling period
-     currentData->samplingPeriod = timeComboBox->currentIndex()+1;
-
-     //save sampling range
-     if(currentRange==0)currentData->samplingRange = 1;
-     if(currentRange==1)currentData->samplingRange = 10;
-     if(currentRange==2)currentData->samplingRange = 100;
-
-//----------end of basic infos about samples---------------------------
-
-     device->copyData(currentData);
-
-     qDebug()<<currentData->samples1CH;
-     qDebug()<<currentData->amountOfChannels;
-
-
-     fftObj = new myFFT; //create myFFT object
-     fftObj->doFFT(currentData); //do FFT and results put in object currentData //class CurrentAllData
-
-     drawSinChart(currentData); //draw sinus/es charts
-     drawFFTChart(currentData); //draw fft charts
-
-     delete fftObj;
 
 }

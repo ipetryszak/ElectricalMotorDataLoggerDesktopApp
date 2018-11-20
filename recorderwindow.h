@@ -36,18 +36,22 @@ public slots:
     void channelChanged();
     void samplingChanged();
     void timeChanged();
-    void howStartChanged();
-    void paintSamples();
+    void startChanged();
     void disconnectedCorrectlyChanged();
     void rangeChanged();
     void loadData();
     void saveData();
     void loadReceivedSample();
+    void currentMaxMinRMSChanged();
+
+signals:
+    newSample();
 
 public:
     RecorderWindow();
     void drawSinChart(CurrentAllData *);
     void drawFFTChart(CurrentAllData *);
+    void createLayout();
 
     CurrentAllData *currentData;
 
@@ -95,6 +99,7 @@ public:
     QPushButton *connectButton;
     QPushButton *loadButton;
     QPushButton *saveButton;
+    QPushButton *startButton;
 
     QLabel *channelsLabel;
     QComboBox *channelsComboBox;
@@ -112,9 +117,7 @@ public:
     QComboBox *rangeComboBox;
     QStringList *rangeStringList;
 
-    QLabel *howStartLabel;
-    QComboBox *howStartComboBox;
-    QStringList *howStartStringList;
+    QLabel *startLabel;
 
     QLabel *samplingFrequencyDescribeLabel;
     QLabel *samplingFrequencyLabel;

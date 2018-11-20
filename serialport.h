@@ -35,6 +35,7 @@ public:
     QByteArray byteArrayToReadData;
     int samplingFrequency = 0;
 private:
+
     static const quint16 vendorID = 1027;
     static const quint16 productID = 24577;
 };

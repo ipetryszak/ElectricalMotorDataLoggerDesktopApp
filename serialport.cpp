@@ -10,7 +10,7 @@ SerialPort::SerialPort()
     connect(myDevice,SIGNAL(readyRead()),this,SLOT(readData()));
 
 
-    /*  testing code to discover vendor and product id
+  /*  //  testing code to discover vendor and product id
      qDebug()<<"Number of ports "<<QSerialPortInfo::availablePorts().length()<<"\n";
      for(const QSerialPortInfo &SerialPortInfo : QSerialPortInfo::availablePorts())
      {
@@ -20,7 +20,7 @@ SerialPort::SerialPort()
          qDebug()<<"Has product ID ? "<<SerialPortInfo.hasProductIdentifier()<<"\n";
          qDebug()<<"Product ID "<<SerialPortInfo.productIdentifier()<<"\n";
      }
-    */
+*/
 
 }
 
@@ -116,14 +116,14 @@ void SerialPort::copyData(CurrentAllData *obj)
 {
     if(obj->amountOfChannels==1)
     {
-        for(int i=0;i<samplesIntVector.size();i++) obj->samples1CH.push_back((float)(samplesIntVector[i]-900));
+        for(int i=0;i<samplesIntVector.size();i++) obj->samples1CH.push_back((float)((samplesIntVector[i]-900)/(float)obj->samplingRange));
     }
     else if(obj->amountOfChannels==2)
     {
         for(int i=0;i<samplesIntVector.size()-1;i++)
         {
-            obj->samples1CH.push_back((float)(samplesIntVector[i++]-900));
-            obj->samples2CH.push_back((float)(samplesIntVector[i]-900));
+            obj->samples1CH.push_back((float)((samplesIntVector[i++]-900)/(float)obj->samplingRange));
+            obj->samples2CH.push_back((float)((samplesIntVector[i]-900)/(float)obj->samplingRange));
         }
     }
     else{}
@@ -147,16 +147,14 @@ void SerialPort::copyData(CurrentAllData *obj)
 
     if(obj->amountOfChannels==1)
     {
-        obj->maxAmplitude = tmpMaxAmplitude/obj->samplingRange;
-        obj->minAmplitude = tmpMinAmplitude/obj->samplingRange;
+        obj->maxAmplitude = tmpMaxAmplitude;
+        obj->minAmplitude = tmpMinAmplitude;
     }
     else if(obj->amountOfChannels==2)
     {
 
         obj->maxAmplitude = (tmpMaxAmplitude>tmpMaxAmplitude2) ? tmpMaxAmplitude : tmpMaxAmplitude2;
         obj->minAmplitude = (tmpMinAmplitude<tmpMinAmplitude2) ? tmpMinAmplitude : tmpMinAmplitude2;
-        obj->maxAmplitude/=obj->samplingRange;
-        obj->minAmplitude/=obj->samplingRange;
 
         qDebug()<<"================================================="<<obj->samples1CH<<"------------------------"<<obj->samples2CH<<"------------";
         qDebug()<<"max amp "<<obj->maxAmplitude<<" min amp "<<obj->minAmplitude;
