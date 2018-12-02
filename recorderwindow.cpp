@@ -165,7 +165,9 @@ void RecorderWindow::drawSinChart(CurrentAllData *obj)
    if(obj->amountOfChannels==2)chart->legend()->show();
    chart->axisY()->setRange(obj->minAmplitude,
                             obj->maxAmplitude);
-   chart->axisX()->setRange(0,0.2);
+   chart->axisX()->setRange(0,0.1);
+   chart->axisX()->setTitleText("t [s]");
+   chart->axisY()->setTitleText("i [A]");
 
 }
 
@@ -199,12 +201,16 @@ void RecorderWindow::drawFFTChart(CurrentAllData *obj)
 
      chartFFT->createDefaultAxes();
      chartFFT->axisY()->setRange(0,obj->maxFFT1Amplitude+0.25*obj->maxFFT1Amplitude);
-     chartFFT->axisX()->setRange(0,obj->xAxis[obj->xAxis.size()-1]);
+     chartFFT->axisX()->setRange(0,200);
+     chartFFT->axisX()->setTitleText("f [Hz]");
+     chartFFT->axisY()->setTitleText("i [A]");
    if(obj->amountOfChannels==2)
       {
      chartFFT2->createDefaultAxes();
      chartFFT2->axisY()->setRange(0,obj->maxFFT2Amplitude+0.25*obj->maxFFT2Amplitude);
-     chartFFT2->axisX()->setRange(0,obj->xAxis[obj->xAxis.size()-1]);
+     chartFFT2->axisX()->setRange(0,200);
+     chartFFT2->axisX()->setTitleText("f [Hz]");
+     chartFFT2->axisY()->setTitleText("i [A]");
     }
 
  }
@@ -526,6 +532,8 @@ void RecorderWindow::createLayout()
     chart->createDefaultAxes();
     chart->axisY()->setRange(-500,500);
     chart->axisX()->setRange(0,0.1);
+    chart->axisX()->setTitleText("t [s]");
+    chart->axisY()->setTitleText("i [A]");
     chartView = new ChartView(chart);
     chartView->setRenderHint(QPainter::Antialiasing);
 
@@ -556,22 +564,25 @@ void RecorderWindow::createLayout()
     chartFFT2->addSeries(seriesFFT2);
 
 
-    chartFFT->setTitle("Rozkład FFT");
+    chartFFT->setTitle("Rozkład FFT CH1");
     chartFFT->setAnimationOptions(QChart::SeriesAnimations);
     chartFFT->legend()->hide();
     chartFFT->createDefaultAxes();
     chartFFT->axisY()->setRange(0,100);
-    chartFFT->axisX()->setRange(0,500);
+    chartFFT->axisX()->setRange(0,200);
+    chartFFT->axisX()->setTitleText("f [Hz]");
+    chartFFT->axisY()->setTitleText("i [A]");
     chartViewFFT->setRenderHint(QPainter::Antialiasing);
 
   //  chartFFT2->addSeries(seriesFFT2);
-    chartFFT2->setTitle(" Rozkład FFT");
+    chartFFT2->setTitle(" Rozkład FFT CH2");
     chartFFT2->setAnimationOptions(QChart::SeriesAnimations);
     chartFFT2->legend()->hide();
     chartFFT2->createDefaultAxes();
     chartFFT2->axisY()->setRange(0,100);
-    chartFFT2->axisX()->setRange(0,500);
-
+    chartFFT2->axisX()->setRange(0,200);
+    chartFFT2->axisX()->setTitleText("f [Hz]");
+    chartFFT2->axisY()->setTitleText("i [A]");
     chartViewFFT2->setRenderHint(QPainter::Antialiasing);
 
 

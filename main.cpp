@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
         tabW->mainWindowTabWidget->setMinimumSize(1150,780);
 
         // Window title
-       tabW->mainWindowTabWidget->setWindowTitle("Rejestrator v.beta");
+       tabW->mainWindowTabWidget->setWindowTitle("Rejestrator przebiegów prądowych");
 
         // Display
         tabW->mainWindowTabWidget->show();

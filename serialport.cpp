@@ -116,14 +116,14 @@ void SerialPort::copyData(CurrentAllData *obj)
 {
     if(obj->amountOfChannels==1)
     {
-        for(int i=0;i<samplesIntVector.size();i++) obj->samples1CH.push_back((float)((samplesIntVector[i]-900)/(float)obj->samplingRange));
+        for(int i=0;i<samplesIntVector.size();i++) obj->samples1CH.push_back((float)((samplesIntVector[i]-1845)/(float)obj->samplingRange));
     }
     else if(obj->amountOfChannels==2)
     {
         for(int i=0;i<samplesIntVector.size()-1;i++)
         {
-            obj->samples1CH.push_back((float)((samplesIntVector[i++]-900)/(float)obj->samplingRange));
-            obj->samples2CH.push_back((float)((samplesIntVector[i]-900)/(float)obj->samplingRange));
+            obj->samples1CH.push_back((float)((samplesIntVector[i++]-1972)/(float)obj->samplingRange));
+            obj->samples2CH.push_back((float)((samplesIntVector[i]-1972)/(float)obj->samplingRange));
         }
     }
     else{}

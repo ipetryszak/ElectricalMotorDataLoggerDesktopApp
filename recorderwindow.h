@@ -1,21 +1,24 @@
 #ifndef RECORDERWINDOW_H
 #define RECORDERWINDOW_H
 
-
+//layout
 #include <QTabWidget>
 #include <QGridLayout>
 #include <QVBoxLayout>
+//elements
 #include <QPushButton>
-#include <QLineSeries>
-#include <QtCore/QtMath>
-#include <QtCore/QRandomGenerator>
 #include <QLabel>
 #include <QComboBox>
 #include <QGroupBox>
 #include <QObject>
 #include <QStatusBar>
 #include <QAbstractAxis>
+
+#include <QLineSeries>
 #include <QScatterSeries>
+
+#include <QtCore/QtMath>
+#include <QtCore/QRandomGenerator>
 
 #include "chart.h"
 #include "chartview.h"

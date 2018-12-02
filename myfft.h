@@ -14,7 +14,7 @@ public:
     myFFT();
 
     void doFFT(CurrentAllData *obj);
-    void doFFT(Files *obj);
+   // void doFFT(Files *obj);
     void analyseFFT(QVector<float>, QVector<float> &, int amountOfFFTSamples,int freq, QVector<float> &,float &);
 
     long amountOfSamples;
